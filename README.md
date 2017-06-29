@@ -7,7 +7,7 @@ the more idiomatic detour over utf8. The crate comes with benchmarks so you can 
 
 # Example
 
-Parsing to digits from a slice
+Parsing from a slice
 ```rust
 use atoi::atoi;
 assert_eq!(Some(42), atoi::<u32>(b"42"));
