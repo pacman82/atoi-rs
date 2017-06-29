@@ -22,3 +22,6 @@ categories = []
 
 [dependencies]
 num-traits="0.1.39"
+
+[dev-dependencies]
+rand="0.3.15"

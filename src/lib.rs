@@ -10,6 +10,35 @@ extern crate num_traits;
 use num_traits::{Zero, One};
 use std::ops::{AddAssign, MulAssign};
 
+/// Types implementing this trait can be parsed from a positional numeral system with radix 10
+pub trait FromRadix10: Sized {
+    /// Parses an integer from a slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromRadix10;
+    /// // Parsing to digits from a slice
+    /// assert_eq!((42,2), u32::from_radix_10(b"42"));
+    /// // Additional bytes after the number are ignored
+    /// assert_eq!((42,2), u32::from_radix_10(b"42 is the answer to life, the universe and everything"));
+    /// // (0,0) is returned if the slice does not start with a digit
+    /// assert_eq!((0,0), u32::from_radix_10(b"Sadly we do not know the question"));
+    /// // While signed integer types are supported...
+    /// assert_eq!((42,2), i32::from_radix_10(b"42"));
+    /// // Signs are not allowed (even for signed integer types)
+    /// assert_eq!((0,0), i32::from_radix_10(b"-42"));
+    /// // Leading zeros are allowed
+    /// assert_eq!((42,4), u32::from_radix_10(b"0042"));
+    /// ```
+    ///
+    /// # Return
+    /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
+    /// index of the byte right after the parsed number. If the second element is zero the slice
+    /// did not start with an ASCII digit.
+    fn from_radix_10(&[u8]) -> (Self, usize);
+}
+
 /// Parses an integer from a slice.
 ///
 /// Contrary to its 'C' counterpart atoi is generic and will require a type argument if the type
@@ -20,36 +49,29 @@ use std::ops::{AddAssign, MulAssign};
 /// ```
 /// use atoi::atoi;
 /// // Parsing to digits from a slice
-/// assert_eq!((42,2), atoi::<u32>(b"42"));
-/// // Additional bytes after the number are ignored
-/// assert_eq!((42,2), atoi::<u32>(b"42 is the answer to life, the universe and everything"));
-/// // (0,0) is returned if the slice does not start with a digit
-/// assert_eq!((0,0), atoi::<u32>(b"Sadly we do not know the question"));
+/// assert_eq!(Some(42), atoi::<u32>(b"42"));
+/// // Additional bytes after the number are ignored. If you want to know how many bytes were used
+/// // to parse the number use `FromRadix10::from_radix_10`.
+/// assert_eq!(Some(42), atoi::<u32>(b"42 is the answer to life, the universe and everything"));
+/// // `None` is returned if the slice does not start with a digit
+/// assert_eq!(None, atoi::<u32>(b"Sadly we do not know the question"));
 /// // While signed integer types are supported...
-/// assert_eq!((42,2), atoi::<i32>(b"42"));
+/// assert_eq!(Some(42), atoi::<i32>(b"42"));
 /// // ... signs currently are not (subject to change in future versions)
-/// assert_eq!((0,0), atoi::<i32>(b"-42"));
+/// assert_eq!(None, atoi::<i32>(b"-42"));
+/// // Leading zeros are allowed
+/// assert_eq!(Some(42), atoi::<u32>(b"0042"));
 /// ```
 ///
 /// # Return
-/// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
-/// index of the byte right after the parsed number. If the second element is zero the slice
-/// did not start with an ASCII digit.
-pub fn atoi<I>(text: &[u8]) -> (I, usize)
-    where I: Zero + One + AddAssign + MulAssign
+/// Returns a a number if the slice started with a number, otherwise `None` is returned.
+pub fn atoi<I>(text: &[u8]) -> Option<I>
+    where I: FromRadix10
 {
-    let mut index = 0;
-    let mut number = I::zero();
-    while index != text.len() {
-        if let Some(digit) = ascii_to_digit(text[index]) {
-            number *= I::ten();
-            number += digit;
-            index += 1;
-        } else {
-            break;
-        }
+    match I::from_radix_10(text) {
+        (_, 0) => None,
+        (n, _) => Some(n),
     }
-    (number, index)
 }
 
 /// Converts an ascii character to digit
@@ -79,7 +101,26 @@ pub fn ascii_to_digit<I>(character: u8) -> Option<I>
     }
 }
 
-trait Inductive: Zero + One {
+impl<I> FromRadix10 for I
+    where I: Zero + One + AddAssign + MulAssign
+{
+    fn from_radix_10(text: &[u8]) -> (Self, usize) {
+        let mut index = 0;
+        let mut number = I::zero();
+        while index != text.len() {
+            if let Some(digit) = ascii_to_digit(text[index]) {
+                number *= I::ten();
+                number += digit;
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        (number, index)
+    }
+}
+
+trait ZeroToTen: Zero + One {
     fn two() -> Self;
     fn three() -> Self;
     fn four() -> Self;
@@ -91,7 +132,7 @@ trait Inductive: Zero + One {
     fn ten() -> Self;
 }
 
-impl<T> Inductive for T
+impl<T> ZeroToTen for T
     where T: Zero + One
 {
     fn two() -> T {
