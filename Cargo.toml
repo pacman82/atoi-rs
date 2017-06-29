@@ -3,6 +3,8 @@ name = "atoi"
 version = "0.1.0"
 authors = ["Markus Klein <markus-klein@live.de>"]
 license = "MIT"
+repository = "https://github.com/pacman82/atoi-rs"
+documentation = "https://docs.rs/atoi/"
 
 # A short blurb about the package. This is not rendered in any format when
 # uploaded to crates.io (aka this is not markdown).

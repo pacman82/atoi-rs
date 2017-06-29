@@ -34,7 +34,7 @@ use std::ops::{AddAssign, MulAssign};
 /// # Return
 /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
 /// index of the byte right after the parsed number. If the second element is zero the slice
-/// did not start with an ASCII number.
+/// did not start with an ASCII digit.
 pub fn atoi<I>(text: &[u8]) -> (I, usize)
     where I: Zero + One + AddAssign + MulAssign
 {
