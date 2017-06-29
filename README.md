@@ -14,4 +14,4 @@ assert_eq!(Some(42), atoi::<u32>(b"42"));
 ```
 
 This [crate](https://www.crates.io/crates/atoi) as more to offer! Check out the full documentation
-at [docs.rs](http://https://docs.rs/atoi).
+at [docs.rs](https://docs.rs/atoi).
