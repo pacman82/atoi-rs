@@ -2,9 +2,8 @@
 //! first. The name is inspired by the famous C function.
 //!
 //! Using `str::from_utf8` and `str::parse`
-//! is likely to be more idiomatic. Use this crate if you want to avoid decoding utf8 (e.g. for
-//! performance reasons), but stick to safe code where using `str::from_ut8_unchecked` is not an
-//! option.
+//! is likely to be more idiomatic. Use this crate if you want to avoid decoding bytes into utf8
+//! (e.g. for performance reasons).
 
 extern crate num_traits;
 use num_traits::{Zero, One, Signed};
