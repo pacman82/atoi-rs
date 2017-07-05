@@ -127,7 +127,7 @@ pub enum Sign {
 }
 
 impl Sign {
-    /// Converts an ascii character to digit
+    /// Trys to convert an ascii character into a `Sign`
     ///
     /// # Example
     ///
