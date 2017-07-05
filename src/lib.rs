@@ -7,7 +7,7 @@
 //! option.
 
 extern crate num_traits;
-use num_traits::{Zero, One};
+use num_traits::{Zero, One, Signed};
 use std::ops::{AddAssign, MulAssign};
 
 /// Types implementing this trait can be parsed from a positional numeral system with radix 10
@@ -87,16 +87,16 @@ pub fn ascii_to_digit<I>(character: u8) -> Option<I>
     where I: Zero + One
 {
     match character {
-        b'0' => Some(I::zero()),
-        b'1' => Some(I::one()),
-        b'2' => Some(I::two()),
-        b'3' => Some(I::three()),
-        b'4' => Some(I::four()),
-        b'5' => Some(I::five()),
-        b'6' => Some(I::six()),
-        b'7' => Some(I::seven()),
-        b'8' => Some(I::eight()),
-        b'9' => Some(I::nine()),
+        b'0' => Some(nth(0)),
+        b'1' => Some(nth(1)),
+        b'2' => Some(nth(2)),
+        b'3' => Some(nth(3)),
+        b'4' => Some(nth(4)),
+        b'5' => Some(nth(5)),
+        b'6' => Some(nth(6)),
+        b'7' => Some(nth(7)),
+        b'8' => Some(nth(8)),
+        b'9' => Some(nth(9)),
         _ => None,
     }
 }
@@ -109,7 +109,7 @@ impl<I> FromRadix10 for I
         let mut number = I::zero();
         while index != text.len() {
             if let Some(digit) = ascii_to_digit(text[index]) {
-                number *= I::ten();
+                number *= nth(10);
                 number += digit;
                 index += 1;
             } else {
@@ -120,54 +120,51 @@ impl<I> FromRadix10 for I
     }
 }
 
-trait ZeroToTen: Zero + One {
-    fn two() -> Self;
-    fn three() -> Self;
-    fn four() -> Self;
-    fn five() -> Self;
-    fn six() -> Self;
-    fn seven() -> Self;
-    fn eight() -> Self;
-    fn nine() -> Self;
-    fn ten() -> Self;
+/// Representation of a numerical sign
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Sign {
+    Plus,
+    Minus,
 }
 
-impl<T> ZeroToTen for T
-    where T: Zero + One
+impl Sign {
+    /// Converts an ascii character to digit
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::Sign;
+    /// assert_eq!(Some(Sign::Plus), Sign::try_from(b'+'));
+    /// assert_eq!(Some(Sign::Minus), Sign::try_from(b'-'));
+    /// assert_eq!(None, Sign::try_from(b'1'));
+    /// ```
+    pub fn try_from(byte: u8) -> Option<Sign> {
+        match byte {
+            b'+' => Some(Sign::Plus),
+            b'-' => Some(Sign::Minus),
+            _ => None,
+        }
+    }
+
+    /// Returns either `+1` or `-1`
+    pub fn signum<I>(self) -> I
+        where I: Signed
+    {
+        match self {
+            Sign::Plus => I::one(),
+            Sign::Minus => -I::one(),
+        }
+    }
+}
+
+// At least for primitive types this function does not incur runtime costs, since it is only called
+// with constants
+fn nth<I>(n: usize) -> I
+    where I: Zero + One
 {
-    fn two() -> T {
-        T::one() + T::one()
+    let mut i = I::zero();
+    for _ in 0..n {
+        i = i + I::one();
     }
-
-    fn three() -> T {
-        T::two() + T::one()
-    }
-
-    fn four() -> T {
-        T::three() + T::one()
-    }
-
-    fn five() -> T {
-        T::four() + T::one()
-    }
-
-    fn six() -> T {
-        T::five() + T::one()
-    }
-
-    fn seven() -> T {
-        T::six() + T::one()
-    }
-
-    fn eight() -> T {
-        T::seven() + T::one()
-    }
-
-    fn nine() -> T {
-        T::eight() + T::one()
-    }
-
-    fn ten() -> T {
-        T::nine() + T::one()
-    }
+    i
 }

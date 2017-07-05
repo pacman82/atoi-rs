@@ -2,7 +2,7 @@
 Parse integers directly from `[u8]` slices in safe code
 
 # Reasons to use this crate
-Starting from a binary or ascii format you can parse an integer around five times as fast as with
+Starting from a binary or ascii format you can parse an integer around three times as fast as with
 the more idiomatic detour over utf8. The crate comes with benchmarks so you can see for yourself.
 
 # Example
