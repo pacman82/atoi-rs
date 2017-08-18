@@ -158,7 +158,7 @@ impl Sign {
 
 // At least for primitive types this function does not incur runtime costs, since it is only called
 // with constants
-fn nth<I>(n: usize) -> I
+fn nth<I>(n: u8) -> I
     where I: Zero + One
 {
     let mut i = I::zero();
