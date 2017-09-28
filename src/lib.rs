@@ -6,8 +6,7 @@
 //! (e.g. for performance reasons).
 
 extern crate num_traits;
-use num_traits::{Zero, One, Signed};
-use std::ops::{AddAssign, MulAssign};
+use num_traits::{Zero, One, CheckedAdd, CheckedMul, Signed};
 
 /// Types implementing this trait can be parsed from a positional numeral system with radix 10
 pub trait FromRadix10: Sized {
@@ -18,24 +17,26 @@ pub trait FromRadix10: Sized {
     /// ```
     /// use atoi::FromRadix10;
     /// // Parsing to digits from a slice
-    /// assert_eq!((42,2), u32::from_radix_10(b"42"));
+    /// assert_eq!((Some(42),2), u32::from_radix_10(b"42"));
     /// // Additional bytes after the number are ignored
-    /// assert_eq!((42,2), u32::from_radix_10(b"42 is the answer to life, the universe and everything"));
-    /// // (0,0) is returned if the slice does not start with a digit
-    /// assert_eq!((0,0), u32::from_radix_10(b"Sadly we do not know the question"));
+    /// assert_eq!((Some(42),2), u32::from_radix_10(b"42 is the answer to life, the universe and everything"));
+    /// // (None,0) is returned if the slice does not start with a digit
+    /// assert_eq!((None,0), u32::from_radix_10(b"Sadly we do not know the question"));
     /// // While signed integer types are supported...
-    /// assert_eq!((42,2), i32::from_radix_10(b"42"));
+    /// assert_eq!((Some(42),2), i32::from_radix_10(b"42"));
     /// // Signs are not allowed (even for signed integer types)
-    /// assert_eq!((0,0), i32::from_radix_10(b"-42"));
+    /// assert_eq!((None,0), i32::from_radix_10(b"-42"));
     /// // Leading zeros are allowed
-    /// assert_eq!((42,4), u32::from_radix_10(b"0042"));
+    /// assert_eq!((Some(42),4), u32::from_radix_10(b"0042"));
+    /// // Overflows are detected.
+    /// assert_eq!((None, 4), u8::from_radix_10(b"1234"));
     /// ```
     ///
     /// # Return
-    /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
+    /// Returns a tuple. The first part is the integer parsed or `None`, the second is the
     /// index of the byte right after the parsed number. If the second element is zero the slice
     /// did not start with an ASCII digit.
-    fn from_radix_10(&[u8]) -> (Self, usize);
+    fn from_radix_10(&[u8]) -> (Option<Self>, usize);
 }
 
 /// Parses an integer from a slice.
@@ -61,6 +62,8 @@ pub trait FromRadix10: Sized {
 /// // Leading zeros are allowed
 /// assert_eq!(Some(42), atoi::<u32>(b"0042"));
 /// ```
+/// // Overflows are detected.
+/// assert_eq!(None, atoi::<u8>(b"1234"));
 ///
 /// # Return
 /// Returns a a number if the slice started with a number, otherwise `None` is returned.
@@ -68,8 +71,7 @@ pub fn atoi<I>(text: &[u8]) -> Option<I>
     where I: FromRadix10
 {
     match I::from_radix_10(text) {
-        (_, 0) => None,
-        (n, _) => Some(n),
+        (n, _) => n
     }
 }
 
@@ -101,21 +103,26 @@ pub fn ascii_to_digit<I>(character: u8) -> Option<I>
 }
 
 impl<I> FromRadix10 for I
-    where I: Zero + One + AddAssign + MulAssign
+    where I: Zero + One + CheckedAdd + CheckedMul
 {
-    fn from_radix_10(text: &[u8]) -> (Self, usize) {
+    fn from_radix_10(text: &[u8]) -> (Option<Self>, usize) {
         let mut index = 0;
-        let mut number = I::zero();
+        let mut number = Some(I::zero());
         while index != text.len() {
             if let Some(digit) = ascii_to_digit(text[index]) {
-                number *= nth(10);
-                number += digit;
+                number = number
+                    .and_then(|n| n.checked_mul(&nth(10)))
+                    .and_then(|n| n.checked_add(&digit));
                 index += 1;
             } else {
                 break;
             }
         }
-        (number, index)
+        if index == 0 {
+            (None, 0)
+        } else {
+            (number, index)
+        }
     }
 }
 
