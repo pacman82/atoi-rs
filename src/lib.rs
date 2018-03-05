@@ -6,7 +6,7 @@
 //! (e.g. for performance reasons).
 
 extern crate num_traits;
-use num_traits::{Zero, One, Signed};
+use num_traits::{One, Signed, Zero};
 use std::ops::{AddAssign, MulAssign};
 
 /// Types implementing this trait can be parsed from a positional numeral system with radix 10
@@ -60,12 +60,16 @@ pub trait FromRadix10: Sized {
 /// assert_eq!(None, atoi::<i32>(b"-42"));
 /// // Leading zeros are allowed
 /// assert_eq!(Some(42), atoi::<u32>(b"0042"));
+/// // By default this will panic in debug or overflow in release builds.
+/// // assert_eq!(Some(0), atoi::<u8>(b"256")).
+/// // use the e.g. the `checked` crate to handle overflows gracefully
 /// ```
 ///
 /// # Return
 /// Returns a a number if the slice started with a number, otherwise `None` is returned.
 pub fn atoi<I>(text: &[u8]) -> Option<I>
-    where I: FromRadix10
+where
+    I: FromRadix10,
 {
     match I::from_radix_10(text) {
         (_, 0) => None,
@@ -83,7 +87,8 @@ pub fn atoi<I>(text: &[u8]) -> Option<I>
 /// assert_eq!(None, ascii_to_digit::<u32>(b'x'));
 /// ```
 pub fn ascii_to_digit<I>(character: u8) -> Option<I>
-    where I: Zero + One
+where
+    I: Zero + One,
 {
     match character {
         b'0' => Some(nth(0)),
@@ -101,7 +106,8 @@ pub fn ascii_to_digit<I>(character: u8) -> Option<I>
 }
 
 impl<I> FromRadix10 for I
-    where I: Zero + One + AddAssign + MulAssign
+where
+    I: Zero + One + AddAssign + MulAssign,
 {
     fn from_radix_10(text: &[u8]) -> (Self, usize) {
         let mut index = 0;
@@ -147,7 +153,8 @@ impl Sign {
 
     /// Returns either `+1` or `-1`
     pub fn signum<I>(self) -> I
-        where I: Signed
+    where
+        I: Signed,
     {
         match self {
             Sign::Plus => I::one(),
@@ -159,11 +166,25 @@ impl Sign {
 // At least for primitive types this function does not incur runtime costs, since it is only called
 // with constants
 fn nth<I>(n: u8) -> I
-    where I: Zero + One
+where
+    I: Zero + One,
 {
     let mut i = I::zero();
     for _ in 0..n {
         i = i + I::one();
     }
     i
+}
+
+#[cfg(test)]
+mod test {
+
+    extern crate checked;
+    use self::checked::Checked;
+    use super::*;
+
+    #[test]
+    fn overflow_detection() {
+        assert_eq!(Some(Checked(None)), atoi::<Checked<u8>>(b"256"));
+    }
 }
