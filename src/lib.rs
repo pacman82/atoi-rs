@@ -4,6 +4,21 @@
 //! Using `str::from_utf8` and `str::parse`
 //! is likely to be more idiomatic. Use this crate if you want to avoid decoding bytes into utf8
 //! (e.g. for performance reasons).
+//!
+//! Note that if you want to know how much of the input has been used, you can use the
+//! `FromRadix10` trait, for example:
+//!
+//! ```rust
+//! use atoi::FromRadix10;
+//!
+//! /// Return the parsed integer and remaining slice if successful.
+//! fn atoi_with_rest<I: FromRadix10>(text: &[u8]) -> Option<(&[u8], I)> {
+//!     match I::from_radix_10(text) {
+//!         (_, 0) => None,
+//!         (n, used) => Some((&[used..], n)),
+//!     }
+//! }
+//! ```
 
 extern crate num_traits;
 use num_traits::{One, Signed, Zero};
