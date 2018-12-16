@@ -45,9 +45,8 @@ use std::{ops::{AddAssign, MulAssign, DivAssign}, cmp::min};
 /// assert_eq!(None, atoi::<i32>(b"-42"));
 /// // Leading zeros are allowed
 /// assert_eq!(Some(42), atoi::<u32>(b"0042"));
-/// // By default this will panic in debug or overflow in release builds.
-/// // assert_eq!(Some(0), atoi::<u8>(b"256")).
-/// // use the e.g. the `checked` crate to handle overflows gracefully
+/// // Overflows will return `None`
+/// assert_eq!(None, atoi::<u8>(b"256"));
 /// ```
 ///
 /// # Return
