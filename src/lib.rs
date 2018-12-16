@@ -12,10 +12,10 @@
 //! use atoi::FromRadix10;
 //!
 //! /// Return the parsed integer and remaining slice if successful.
-//! fn atoi_with_rest<I: FromRadix10>(text: &[u8]) -> Option<(&[u8], I)> {
+//! fn atoi_with_rest<I: FromRadix10>(text: &[u8]) -> ((&[u8], Option<I>)) {
 //!     match I::from_radix_10(text) {
-//!         (_, 0) => None,
-//!         (n, used) => Some((&[used..], n)),
+//!         (_, 0) => (text, None),
+//!         (n, used) => (&text[used..], Some(n)),
 //!     }
 //! }
 //! ```
@@ -47,6 +47,7 @@ pub trait FromRadix10: Sized {
     /// ```
     ///
     /// # Return
+    ///
     /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
     /// index of the byte right after the parsed number. If the second element is zero the slice
     /// did not start with an ASCII digit.
@@ -81,6 +82,7 @@ pub trait FromRadix10: Sized {
 /// ```
 ///
 /// # Return
+///
 /// Returns a a number if the slice started with a number, otherwise `None` is returned.
 pub fn atoi<I>(text: &[u8]) -> Option<I>
 where
