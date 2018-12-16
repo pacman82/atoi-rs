@@ -20,7 +20,6 @@
 //! }
 //! ```
 
-extern crate num_traits;
 use num_traits::{One, Signed, Zero};
 use std::ops::{AddAssign, MulAssign};
 
@@ -51,7 +50,7 @@ pub trait FromRadix10: Sized {
     /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
     /// index of the byte right after the parsed number. If the second element is zero the slice
     /// did not start with an ASCII digit.
-    fn from_radix_10(&[u8]) -> (Self, usize);
+    fn from_radix_10(_: &[u8]) -> (Self, usize);
 }
 
 /// Parses an integer from a slice.
