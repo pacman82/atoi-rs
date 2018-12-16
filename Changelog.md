@@ -12,3 +12,8 @@ Changelog
 
 * Added `From_radix_10_checked`.
 * Breaking change: atoi now returns `None` on overflow
+
+0.3.1
+-----
+
+* Fix: Fixed documentation of `atoi`s overflow behaviour.
