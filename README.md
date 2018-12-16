@@ -7,6 +7,9 @@ Parse integers directly from `[u8]` slices in safe code
 Starting from a binary or ascii format you can parse an integer around three times as fast as with
 the more idiomatic detour over utf8. The crate comes with benchmarks so you can see for yourself.
 
+The `FromRadix10Checked` trait also provides a way to parse integers very fast and safe, as its
+implementation only performs checked arithmetics for the one digit that may actually overflow.
+
 ## Example
 
 Parsing from a slice
