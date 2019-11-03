@@ -20,8 +20,14 @@
 //! }
 //! ```
 
-use num_traits::{One, Signed, Zero, Bounded, ops::checked::{CheckedMul, CheckedAdd}};
-use std::{ops::{AddAssign, MulAssign, DivAssign}, cmp::min};
+use num_traits::{
+    ops::checked::{CheckedAdd, CheckedMul},
+    Bounded, One, Signed, Zero,
+};
+use std::{
+    cmp::min,
+    ops::{AddAssign, DivAssign, MulAssign},
+};
 
 /// Parses an integer from a slice.
 ///
@@ -61,7 +67,6 @@ where
         (Some(n), _) => Some(n),
     }
 }
-
 
 /// Types implementing this trait can be parsed from a positional numeral system with radix 10
 pub trait FromRadix10: Sized {
@@ -202,7 +207,10 @@ pub trait MaxNumDigits {
     fn max_num_digits(radix: Self) -> usize;
 }
 
-impl<I> MaxNumDigits for I where I: Bounded + Zero + DivAssign + Ord +  Copy{
+impl<I> MaxNumDigits for I
+where
+    I: Bounded + Zero + DivAssign + Ord + Copy,
+{
     /// Returns the maximum number of digits a representation of `I` can have depending on `radix`.
     fn max_num_digits(radix: I) -> usize {
         let mut max = I::max_value();
@@ -269,10 +277,10 @@ where
 {
     fn from_radix_10_checked(text: &[u8]) -> (Option<I>, usize) {
         let max_safe_digits = I::max_num_digits(nth(10)) - 1;
-        let (number, mut index) = I::from_radix_10(&text[..min(text.len(),max_safe_digits)]);
+        let (number, mut index) = I::from_radix_10(&text[..min(text.len(), max_safe_digits)]);
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:
-        while index != text.len(){
+        while index != text.len() {
             if let Some(digit) = ascii_to_digit(text[index]) {
                 number = number.and_then(|n| n.checked_mul(&nth(10)));
                 number = number.and_then(|n| n.checked_add(&digit));
@@ -337,10 +345,10 @@ where
 {
     fn from_radix_16_checked(text: &[u8]) -> (Option<I>, usize) {
         let max_safe_digits = I::max_num_digits(nth(16)) - 1;
-        let (number, mut index) = I::from_radix_16(&text[..min(text.len(),max_safe_digits)]);
+        let (number, mut index) = I::from_radix_16(&text[..min(text.len(), max_safe_digits)]);
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:
-        while index != text.len(){
+        while index != text.len() {
             if let Some(digit) = ascii_to_hexdigit(text[index]) {
                 number = number.and_then(|n| n.checked_mul(&nth(16)));
                 number = number.and_then(|n| n.checked_add(&digit));
@@ -410,7 +418,7 @@ mod test {
     use super::*;
 
     #[test]
-    fn max_digits(){
+    fn max_digits() {
         assert_eq!(10, i32::max_num_digits(10));
         assert_eq!(10, u32::max_num_digits(10));
         assert_eq!(19, i64::max_num_digits(10));
