@@ -125,6 +125,73 @@ pub trait FromRadix10Checked: FromRadix10 {
     fn from_radix_10_checked(_: &[u8]) -> (Option<Self>, usize);
 }
 
+/// Types implementing this trait can be parsed from a positional numeral system with radix 16
+pub trait FromRadix16: Sized {
+    /// Parses an integer from a slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromRadix16;
+    /// // Parsing to digits from a slice
+    /// assert_eq!((42,2), u32::from_radix_16(b"2a"));
+    /// // Additional bytes after the number are ignored
+    /// assert_eq!((42,2), u32::from_radix_16(b"2a is the answer to life, the universe and everything"));
+    /// // (0,0) is returned if the slice does not start with a digit
+    /// assert_eq!((0,0), u32::from_radix_16(b"Sadly we do not know the question"));
+    /// // While signed integer types are supported...
+    /// assert_eq!((42,2), i32::from_radix_16(b"2a"));
+    /// // Signs are not allowed (even for signed integer types)
+    /// assert_eq!((0,0), i32::from_radix_16(b"-2a"));
+    /// // Leading zeros are allowed
+    /// assert_eq!((42,4), u32::from_radix_16(b"002a"));
+    /// // so are uppercase letters
+    /// assert_eq!((42,4), u32::from_radix_16(b"002A"));
+    /// ```
+    ///
+    /// # Return
+    ///
+    /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
+    /// index of the byte right after the parsed number. If the second element is zero the slice
+    /// did not start with an ASCII digit.
+    fn from_radix_16(_: &[u8]) -> (Self, usize);
+}
+
+/// Types implementing this trait can be parsed from a positional numeral system with radix 10.
+/// Acts much like `FromRadix10`, but performs additional checks for overflows.
+pub trait FromRadix16Checked: FromRadix16 {
+    /// Parses an integer from a slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromRadix16Checked;
+    /// // Parsing to digits from a slice
+    /// assert_eq!((Some(42),2), u32::from_radix_16_checked(b"2a"));
+    /// // Additional bytes after the number are ignored
+    /// assert_eq!((Some(42),2), u32::from_radix_16_checked(b"2a is the answer to life, the \
+    /// universe and everything"));
+    /// // (0,0) is returned if the slice does not start with a digit
+    /// assert_eq!((Some(0),0), u32::from_radix_16_checked(b"Sadly we do not know the question"));
+    /// // While signed integer types are supported...
+    /// assert_eq!((Some(42),2), i32::from_radix_16_checked(b"2a"));
+    /// // Signs are not allowed (even for signed integer types)
+    /// assert_eq!((Some(0),0), i32::from_radix_16_checked(b"-2a"));
+    /// // Leading zeros are allowed
+    /// assert_eq!((Some(42),4), u32::from_radix_16_checked(b"002a"));
+    /// // So are uppercase letters
+    /// assert_eq!((Some(42),2), u32::from_radix_16_checked(b"2A"))
+    /// ```
+    ///
+    /// # Return
+    ///
+    /// Returns a tuple with two numbers. The first is the integer parsed or zero if no digit has
+    /// been found. None, if there were too many, or too high dighits and the parsing overflowed.
+    /// The second is the index of the byte right after the parsed number. If the second element is
+    /// zero the slice did not start with an ASCII digit.
+    fn from_radix_16_checked(_: &[u8]) -> (Option<Self>, usize);
+}
+
 /// A bounded integer, whose representation can overflow and therfore can only store a maximum
 /// number of digits
 pub trait MaxNumDigits {
@@ -216,6 +283,74 @@ where
     }
 }
 
+/// Converts an ascii character to digit
+fn ascii_to_hexdigit<I>(character: u8) -> Option<I>
+where
+    I: Zero + One,
+{
+    match character {
+        b'0' => Some(nth(0)),
+        b'1' => Some(nth(1)),
+        b'2' => Some(nth(2)),
+        b'3' => Some(nth(3)),
+        b'4' => Some(nth(4)),
+        b'5' => Some(nth(5)),
+        b'6' => Some(nth(6)),
+        b'7' => Some(nth(7)),
+        b'8' => Some(nth(8)),
+        b'9' => Some(nth(9)),
+        b'a' | b'A' => Some(nth(10)),
+        b'b' | b'B' => Some(nth(11)),
+        b'c' | b'C' => Some(nth(12)),
+        b'd' | b'D' => Some(nth(13)),
+        b'e' | b'E' => Some(nth(14)),
+        b'f' | b'F' => Some(nth(15)),
+        _ => None,
+    }
+}
+
+impl<I> FromRadix16 for I
+where
+    I: Zero + One + AddAssign + MulAssign,
+{
+    fn from_radix_16(text: &[u8]) -> (Self, usize) {
+        let mut index = 0;
+        let mut number = I::zero();
+        while index != text.len() {
+            if let Some(digit) = ascii_to_hexdigit(text[index]) {
+                number *= nth(16);
+                number += digit;
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        (number, index)
+    }
+}
+
+impl<I> FromRadix16Checked for I
+where
+    I: Zero + One + FromRadix16 + CheckedMul + CheckedAdd + MaxNumDigits,
+{
+    fn from_radix_16_checked(text: &[u8]) -> (Option<I>, usize) {
+        let max_safe_digits = I::max_num_digits(nth(16)) - 1;
+        let (number, mut index) = I::from_radix_16(&text[..min(text.len(),max_safe_digits)]);
+        let mut number = Some(number);
+        // We parsed the digits, which do not need checking now lets see the next one:
+        while index != text.len(){
+            if let Some(digit) = ascii_to_hexdigit(text[index]) {
+                number = number.and_then(|n| n.checked_mul(&nth(16)));
+                number = number.and_then(|n| n.checked_add(&digit));
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        (number, index)
+    }
+}
+
 /// Representation of a numerical sign
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Sign {
@@ -287,5 +422,14 @@ mod test {
         assert_eq!((None, 4), u8::from_radix_10_checked(b"1000"));
         assert_eq!((Some(25), 2), u8::from_radix_10_checked(b"25"));
         assert_eq!((Some(25), 2), u8::from_radix_10_checked(b"25Blub"));
+    }
+
+    #[test]
+    fn checked_parsing_radix_16() {
+        assert_eq!((Some(255), 2), u8::from_radix_16_checked(b"FF"));
+        assert_eq!((None, 3), u8::from_radix_16_checked(b"100"));
+        assert_eq!((None, 4), u8::from_radix_16_checked(b"1000"));
+        assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19"));
+        assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19!Blub"));
     }
 }
