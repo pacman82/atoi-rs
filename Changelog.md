@@ -1,11 +1,16 @@
 Changelog
 =========
 
-0.2.4
+0.3.2
 -----
 
-* Documentation now hints at `FromRadix10` trait.\
-* Updated to Rust 2018
+* Add support for hex numbers through `FromRadix16` and `FromRadix16Checked`.
+* Fix: Documentation of `FromRadix10Checked` now has code samples using this trait.
+
+0.3.1
+-----
+
+* Fix: Fixed documentation of `atoi`s overflow behaviour.
 
 0.3.0
 -----
@@ -13,7 +18,8 @@ Changelog
 * Added `From_radix_10_checked`.
 * Breaking change: atoi now returns `None` on overflow
 
-0.3.1
+0.2.4
 -----
 
-* Fix: Fixed documentation of `atoi`s overflow behaviour.
+* Documentation now hints at `FromRadix10` trait.
+* Updated to Rust 2018
