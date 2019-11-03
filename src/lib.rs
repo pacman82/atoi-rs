@@ -101,19 +101,21 @@ pub trait FromRadix10Checked: FromRadix10 {
     /// # Example
     ///
     /// ```
-    /// use atoi::FromRadix10;
+    /// use atoi::FromRadix10Checked;
     /// // Parsing to digits from a slice
-    /// assert_eq!((42,2), u32::from_radix_10(b"42"));
+    /// assert_eq!((Some(42),2), u32::from_radix_10_checked(b"42"));
     /// // Additional bytes after the number are ignored
-    /// assert_eq!((42,2), u32::from_radix_10(b"42 is the answer to life, the universe and everything"));
+    /// assert_eq!((Some(42),2), u32::from_radix_10_checked(b"42 is the answer to life, the universe and everything"));
     /// // (0,0) is returned if the slice does not start with a digit
-    /// assert_eq!((0,0), u32::from_radix_10(b"Sadly we do not know the question"));
+    /// assert_eq!((Some(0),0), u32::from_radix_10_checked(b"Sadly we do not know the question"));
     /// // While signed integer types are supported...
-    /// assert_eq!((42,2), i32::from_radix_10(b"42"));
+    /// assert_eq!((Some(42),2), i32::from_radix_10_checked(b"42"));
     /// // Signs are not allowed (even for signed integer types)
-    /// assert_eq!((0,0), i32::from_radix_10(b"-42"));
+    /// assert_eq!((Some(0),0), i32::from_radix_10_checked(b"-42"));
     /// // Leading zeros are allowed
-    /// assert_eq!((42,4), u32::from_radix_10(b"0042"));
+    /// assert_eq!((Some(42),4), u32::from_radix_10_checked(b"0042"));
+    /// // Overflow is indicated by `None`
+    /// assert_eq!((None, 3), u8::from_radix_10_checked(b"256"));
     /// ```
     ///
     /// # Return
