@@ -1,7 +1,7 @@
 #![feature(test)]
-extern crate test;
 extern crate atoi;
-use atoi::{FromRadix10, FromRadix10Checked};
+extern crate test;
+use atoi::{FromRadix10, FromRadix10Checked, FromRadix16, FromRadix16Checked};
 use std::str;
 
 #[bench]
@@ -22,6 +22,26 @@ fn u32_four_digit_number(b: &mut test::Bencher) {
 #[bench]
 fn u32_four_digit_number_checked(b: &mut test::Bencher) {
     b.iter(|| u32::from_radix_10_checked(test::black_box(b"1996")))
+}
+
+#[bench]
+fn i32_four_digit_hex_number(b: &mut test::Bencher) {
+    b.iter(|| i32::from_radix_16(test::black_box(b"1996")))
+}
+
+#[bench]
+fn i32_four_digit_number_hex_checked(b: &mut test::Bencher) {
+    b.iter(|| i32::from_radix_16_checked(test::black_box(b"1996")))
+}
+
+#[bench]
+fn u32_four_digit_hex_number(b: &mut test::Bencher) {
+    b.iter(|| u32::from_radix_16(test::black_box(b"1996")))
+}
+
+#[bench]
+fn u32_four_digit_hex_number_checked(b: &mut test::Bencher) {
+    b.iter(|| u32::from_radix_16_checked(test::black_box(b"1996")))
 }
 
 #[bench]
