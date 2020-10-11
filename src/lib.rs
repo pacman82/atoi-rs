@@ -199,10 +199,10 @@ pub trait FromRadix16Checked: FromRadix16 {
     fn from_radix_16_checked(_: &[u8]) -> (Option<Self>, usize);
 }
 
-/// A bounded integer, whose representation can overflow and therfore can only store a maximum
+/// A bounded integer, whose representation can overflow and therefore can only store a maximum
 /// number of digits
 pub trait MaxNumDigits {
-    /// Given a representation with a radix charactar I, what is the maximum number of digits we can
+    /// Given a representation with a radix character I, what is the maximum number of digits we can
     /// parse without the integer overflowing for sure?
     fn max_num_digits(radix: Self) -> usize;
 }

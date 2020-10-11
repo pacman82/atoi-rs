@@ -28,3 +28,10 @@ readme = "README.md"
 
 [dependencies]
 num-traits="0.2"
+
+[dev-dependencies]
+criterion = "0.3.3"
+
+[[bench]]
+name = "benches"
+harness = false
