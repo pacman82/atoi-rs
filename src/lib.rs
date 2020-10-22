@@ -24,10 +24,7 @@ use num_traits::{
     ops::checked::{CheckedAdd, CheckedMul},
     Bounded, One, Signed, Zero,
 };
-use std::{
-    cmp::min,
-    ops::{AddAssign, DivAssign, MulAssign},
-};
+use std::{cmp::min, ops::{AddAssign, DivAssign, MulAssign, SubAssign}};
 
 /// Parses an integer from a slice.
 ///
@@ -305,29 +302,49 @@ where
 
 impl<I> FromRadix10Signed for I
 where
-    I: Zero + One + AddAssign + MulAssign + Signed + Copy,
+    I: Zero + One + AddAssign + SubAssign +  MulAssign,
 {
     fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
-        let mut index = 0;
+        let mut index;
         let mut number = I::zero();
 
-        let (signum, offset) : (I, usize) = text
+        let (sign, offset) = text
             .first()
             .and_then(|&byte| Sign::try_from(byte))
-            .map(|sign| (sign.signum(), 1))
-            .unwrap_or((I::one(), 0));
+            .map(|sign| (sign, 1))
+            .unwrap_or((Sign::Plus, 0));
 
-        index += offset;
+        index = offset;
 
-        while index != text.len() {
-            if let Some(digit) = ascii_to_digit::<I>(text[index]) {
-                number *= nth(10);
-                number += digit * signum;
-                index += 1;
-            } else {
-                break;
+        // Having two dedicated loops for both the negative and the nonnegative case is rather
+        // verbose, yet performed up to 40% better then a more terse single loop with
+        // `number += digit * signum`.
+
+        match sign {
+            Sign::Plus => {
+                while index != text.len() {
+                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                        number *= nth(10);
+                        number += digit;
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            Sign::Minus => {
+                while index != text.len() {
+                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                        number *= nth(10);
+                        number -= digit;
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
             }
         }
+
         (number, index)
     }
 }
