@@ -199,6 +199,38 @@ pub trait FromRadix16Checked: FromRadix16 {
     fn from_radix_16_checked(_: &[u8]) -> (Option<Self>, usize);
 }
 
+/// Types implementing this trait can be parsed from a positional numeral system with radix 10. This
+/// trait allows for an additional sign character (`+` or `-`) in front of the actual number in
+/// order, to allow for parsing negative values.
+pub trait FromRadix10Signed: Sized {
+    /// Parses an integer from a slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromRadix10Signed;
+    /// // Parsing to digits from a slice
+    /// assert_eq!((42,2), i32::from_radix_10_signed(b"42"));
+    /// // Additional bytes after the number are ignored
+    /// assert_eq!((42,2), i32::from_radix_10_signed(b"42 is the answer to life, the universe and everything"));
+    /// // (0,0) is returned if the slice does not start with a digit
+    /// assert_eq!((0,0), i32::from_radix_10_signed(b"Sadly we do not know the question"));
+    /// // Signs are allowed
+    /// assert_eq!((-42,3), i32::from_radix_10_signed(b"-42"));
+    /// // Signs are allowed
+    /// assert_eq!((42,3), i32::from_radix_10_signed(b"+42"));
+    /// // Leading zeros are allowed
+    /// assert_eq!((42,4), i32::from_radix_10_signed(b"0042"));
+    /// ```
+    ///
+    /// # Return
+    ///
+    /// Returns a tuple with two numbers. The first is the integer parsed or zero, the second is the
+    /// index of the byte right after the parsed number. If the second element is zero the slice
+    /// did not start with an ASCII digit.
+    fn from_radix_10_signed(_: &[u8]) -> (Self, usize);
+}
+
 /// A bounded integer, whose representation can overflow and therefore can only store a maximum
 /// number of digits
 pub trait MaxNumDigits {
@@ -262,6 +294,35 @@ where
             if let Some(digit) = ascii_to_digit(text[index]) {
                 number *= nth(10);
                 number += digit;
+                index += 1;
+            } else {
+                break;
+            }
+        }
+        (number, index)
+    }
+}
+
+impl<I> FromRadix10Signed for I
+where
+    I: Zero + One + AddAssign + MulAssign + Signed + Copy,
+{
+    fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
+        let mut index = 0;
+        let mut number = I::zero();
+
+        let (signum, offset) : (I, usize) = text
+            .first()
+            .and_then(|&byte| Sign::try_from(byte))
+            .map(|sign| (sign.signum(), 1))
+            .unwrap_or((I::one(), 0));
+
+        index += offset;
+
+        while index != text.len() {
+            if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                number *= nth(10);
+                number += digit * signum;
                 index += 1;
             } else {
                 break;

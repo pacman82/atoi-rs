@@ -27,7 +27,7 @@ categories = ["parsing"]
 readme = "README.md"
 
 [dependencies]
-num-traits="0.2"
+num-traits= "0.2.12"
 
 [dev-dependencies]
 criterion = "0.3.3"
