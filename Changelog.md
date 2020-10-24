@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3.3
+-----
+
+* Introduce `FromRadix10Signed` and `FromRadix10SignedChecked` for parsing signed integers.
+
 0.3.2
 -----
 

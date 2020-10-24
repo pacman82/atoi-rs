@@ -22,9 +22,12 @@
 
 use num_traits::{
     ops::checked::{CheckedAdd, CheckedMul},
-    Bounded, One, Signed, Zero,
+    Bounded, CheckedSub, One, Signed, Zero,
 };
-use std::{cmp::min, ops::{AddAssign, DivAssign, MulAssign, SubAssign}};
+use std::{
+    cmp::{max, min},
+    ops::{AddAssign, DivAssign, MulAssign, SubAssign},
+};
 
 /// Parses an integer from a slice.
 ///
@@ -228,25 +231,78 @@ pub trait FromRadix10Signed: Sized {
     fn from_radix_10_signed(_: &[u8]) -> (Self, usize);
 }
 
+/// Types implementing this trait can be parsed from a positional numeral system with radix 10.
+/// Acts much like `FromRadix10`, but performs additional checks for overflows.
+pub trait FromRadix10SignedChecked: FromRadix10Signed {
+    /// Parses an integer from a slice.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromRadix10SignedChecked;
+    /// // Parsing to digits from a slice
+    /// assert_eq!((Some(42),2), u32::from_radix_10_signed_checked(b"42"));
+    /// // Additional bytes after the number are ignored
+    /// assert_eq!((Some(42),2), u32::from_radix_10_signed_checked(b"42 is the answer to life, the universe and everything"));
+    /// // (0,0) is returned if the slice does not start with a digit
+    /// assert_eq!((Some(0),0), u32::from_radix_10_signed_checked(b"Sadly we do not know the question"));
+    /// // While signed integer types are supported...
+    /// assert_eq!((Some(42),2), i32::from_radix_10_signed_checked(b"42"));
+    /// // Signs are allowed
+    /// assert_eq!((Some(-42),3), i32::from_radix_10_signed_checked(b"-42"));
+    /// // Leading zeros are allowed
+    /// assert_eq!((Some(42),4), u32::from_radix_10_signed_checked(b"0042"));
+    /// // Overflow is indicated by `None`
+    /// assert_eq!((None, 3), u8::from_radix_10_signed_checked(b"256"));
+    /// assert_eq!((None, 4), i8::from_radix_10_signed_checked(b"+128"));
+    /// assert_eq!((None, 4), i8::from_radix_10_signed_checked(b"-129"));
+    /// ```
+    ///
+    /// # Return
+    ///
+    /// Returns a tuple with two numbers. The first is the integer parsed or zero if no digit has
+    /// been found. None, if there were too many, or too high dighits and the parsing overflowed.
+    /// The second is the index of the byte right after the parsed number. If the second element is
+    /// zero the slice did not start with an ASCII digit.
+    fn from_radix_10_signed_checked(_: &[u8]) -> (Option<Self>, usize);
+}
+
 /// A bounded integer, whose representation can overflow and therefore can only store a maximum
 /// number of digits
 pub trait MaxNumDigits {
     /// Given a representation with a radix character I, what is the maximum number of digits we can
     /// parse without the integer overflowing for sure?
     fn max_num_digits(radix: Self) -> usize;
+
+    /// Returns the maximum number of digits a negative representation of `I` can have depending on
+    /// `radix`.
+    fn max_num_digits_negative(radix: Self) -> usize;
 }
 
 impl<I> MaxNumDigits for I
 where
     I: Bounded + Zero + DivAssign + Ord + Copy,
 {
-    /// Returns the maximum number of digits a representation of `I` can have depending on `radix`.
+    /// Returns the maximum number of digits a nonnegative representation of `I` can have depending
+    /// on `radix`.
     fn max_num_digits(radix: I) -> usize {
         let mut max = I::max_value();
         let mut d = 0;
         while max > I::zero() {
             d += 1;
             max /= radix;
+        }
+        d
+    }
+
+    /// Returns the maximum number of digits a negative representation of `I` can have depending
+    /// on `radix`.
+    fn max_num_digits_negative(radix: I) -> usize {
+        let mut min = I::min_value();
+        let mut d = 0;
+        while min < I::zero() {
+            d += 1;
+            min /= radix;
         }
         d
     }
@@ -302,7 +358,7 @@ where
 
 impl<I> FromRadix10Signed for I
 where
-    I: Zero + One + AddAssign + SubAssign +  MulAssign,
+    I: Zero + One + AddAssign + SubAssign + MulAssign,
 {
     fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
         let mut index;
@@ -349,12 +405,95 @@ where
     }
 }
 
+impl<I> FromRadix10SignedChecked for I
+where
+    I: Zero
+        + One
+        + AddAssign
+        + MulAssign
+        + SubAssign
+        + CheckedAdd
+        + CheckedSub
+        + CheckedMul
+        + MaxNumDigits,
+{
+    fn from_radix_10_signed_checked(text: &[u8]) -> (Option<Self>, usize) {
+        let mut index;
+        let mut number = I::zero();
+
+        let (sign, offset) = text
+            .first()
+            .and_then(|&byte| Sign::try_from(byte))
+            .map(|sign| (sign, 1))
+            .unwrap_or((Sign::Plus, 0));
+
+        index = offset;
+
+        // Having two dedicated loops for both the negative and the nonnegative case is rather
+        // verbose, yet performed up to 40% better then a more terse single loop with
+        // `number += digit * signum`.
+
+        match sign {
+            Sign::Plus => {
+                let max_safe_digits = max(1, I::max_num_digits(nth(10))) - 1;
+                let max_safe_index = min(text.len(), max_safe_digits + offset);
+                while index != max_safe_index {
+                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                        number *= nth(10);
+                        number += digit;
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                // We parsed the digits, which do not need checking now lets see the next one:
+                let mut number = Some(number);
+                while index != text.len() {
+                    if let Some(digit) = ascii_to_digit(text[index]) {
+                        number = number.and_then(|n| n.checked_mul(&nth(10)));
+                        number = number.and_then(|n| n.checked_add(&digit));
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (number, index)
+            }
+            Sign::Minus => {
+                let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
+                let max_safe_index = min(text.len(), max_safe_digits + offset);
+                while index != max_safe_index {
+                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                        number *= nth(10);
+                        number -= digit;
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                // We parsed the digits, which do not need checking now lets see the next one:
+                let mut number = Some(number);
+                while index != text.len() {
+                    if let Some(digit) = ascii_to_digit(text[index]) {
+                        number = number.and_then(|n| n.checked_mul(&nth(10)));
+                        number = number.and_then(|n| n.checked_sub(&digit));
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (number, index)
+            }
+        }
+    }
+}
+
 impl<I> FromRadix10Checked for I
 where
     I: Zero + One + FromRadix10 + CheckedMul + CheckedAdd + MaxNumDigits,
 {
     fn from_radix_10_checked(text: &[u8]) -> (Option<I>, usize) {
-        let max_safe_digits = I::max_num_digits(nth(10)) - 1;
+        let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
         let (number, mut index) = I::from_radix_10(&text[..min(text.len(), max_safe_digits)]);
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:
@@ -422,7 +561,7 @@ where
     I: Zero + One + FromRadix16 + CheckedMul + CheckedAdd + MaxNumDigits,
 {
     fn from_radix_16_checked(text: &[u8]) -> (Option<I>, usize) {
-        let max_safe_digits = I::max_num_digits(nth(16)) - 1;
+        let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
         let (number, mut index) = I::from_radix_16(&text[..min(text.len(), max_safe_digits)]);
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:
@@ -501,6 +640,18 @@ mod test {
         assert_eq!(10, u32::max_num_digits(10));
         assert_eq!(19, i64::max_num_digits(10));
         assert_eq!(20, u64::max_num_digits(10));
+        assert_eq!(3, u8::max_num_digits(10));
+        assert_eq!(3, i8::max_num_digits(10));
+    }
+
+    #[test]
+    fn max_digits_negative() {
+        assert_eq!(10, i32::max_num_digits_negative(10));
+        assert_eq!(0, u32::max_num_digits_negative(10));
+        assert_eq!(19, i64::max_num_digits_negative(10));
+        assert_eq!(0, u64::max_num_digits_negative(10));
+        assert_eq!(0, u8::max_num_digits_negative(10));
+        assert_eq!(3, i8::max_num_digits_negative(10));
     }
 
     #[test]
