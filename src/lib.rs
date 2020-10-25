@@ -164,8 +164,8 @@ pub trait FromRadix16: Sized {
     fn from_radix_16(_: &[u8]) -> (Self, usize);
 }
 
-/// Types implementing this trait can be parsed from a positional numeral system with radix 10.
-/// Acts much like `FromRadix10`, but performs additional checks for overflows.
+/// Types implementing this trait can be parsed from a positional numeral system with radix 16.
+/// Acts much like `FromRadix16`, but performs additional checks for overflows.
 pub trait FromRadix16Checked: FromRadix16 {
     /// Parses an integer from a slice.
     ///
@@ -219,6 +219,8 @@ pub trait FromRadix10Signed: Sized {
     /// assert_eq!((-42,3), i32::from_radix_10_signed(b"-42"));
     /// // Signs are allowed
     /// assert_eq!((42,3), i32::from_radix_10_signed(b"+42"));
+    /// // Even on unsigned types.
+    /// assert_eq!((0,2), u32::from_radix_10_signed(b"-0"));
     /// // Leading zeros are allowed
     /// assert_eq!((42,4), i32::from_radix_10_signed(b"0042"));
     /// ```
@@ -232,7 +234,7 @@ pub trait FromRadix10Signed: Sized {
 }
 
 /// Types implementing this trait can be parsed from a positional numeral system with radix 10.
-/// Acts much like `FromRadix10`, but performs additional checks for overflows.
+/// Acts much like `FromRadix10Signed`, but performs additional checks for overflows.
 pub trait FromRadix10SignedChecked: FromRadix10Signed {
     /// Parses an integer from a slice.
     ///
@@ -250,6 +252,10 @@ pub trait FromRadix10SignedChecked: FromRadix10Signed {
     /// assert_eq!((Some(42),2), i32::from_radix_10_signed_checked(b"42"));
     /// // Signs are allowed
     /// assert_eq!((Some(-42),3), i32::from_radix_10_signed_checked(b"-42"));
+    /// // Signs even on unsigned types
+    /// assert_eq!((Some(0),2), u32::from_radix_10_signed_checked(b"-0"));
+    /// // Negative values for unsigned types are handled as `None`.
+    /// assert_eq!((None,3), u32::from_radix_10_signed_checked(b"-42"));
     /// // Leading zeros are allowed
     /// assert_eq!((Some(42),4), u32::from_radix_10_signed_checked(b"0042"));
     /// // Overflow is indicated by `None`
