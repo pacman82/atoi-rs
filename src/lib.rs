@@ -32,7 +32,11 @@ use std::{
 /// Parses an integer from a slice.
 ///
 /// Contrary to its 'C' counterpart atoi is generic and will require a type argument if the type
-/// inference can not determine its result.
+/// inference can not determine its result. It will also check for overflow / underflow and allow
+/// for Signs.
+///
+/// Use [`FromRadix10`] or [`FromRadix10Checked`] directly if you do not want to allow signs. Use
+/// [`FromRadix10`] or [`FromRadix10Signed`] if you want to opt out overflow / underflow checking.
 ///
 /// # Example
 ///
@@ -47,8 +51,8 @@ use std::{
 /// assert_eq!(None, atoi::<u32>(b"Sadly we do not know the question"));
 /// // While signed integer types are supported...
 /// assert_eq!(Some(42), atoi::<i32>(b"42"));
-/// // ... signs currently are not (subject to change in future versions)
-/// assert_eq!(None, atoi::<i32>(b"-42"));
+/// // Signs are allowed.
+/// assert_eq!(Some(-42), atoi::<i32>(b"-42"));
 /// // Leading zeros are allowed
 /// assert_eq!(Some(42), atoi::<u32>(b"0042"));
 /// // Overflows will return `None`
@@ -60,9 +64,9 @@ use std::{
 /// Returns a a number if the slice started with a number, otherwise `None` is returned.
 pub fn atoi<I>(text: &[u8]) -> Option<I>
 where
-    I: FromRadix10Checked,
+    I: FromRadix10SignedChecked,
 {
-    match I::from_radix_10_checked(text) {
+    match I::from_radix_10_signed_checked(text) {
         (_, 0) | (None, _) => None,
         (Some(n), _) => Some(n),
     }
@@ -252,8 +256,10 @@ pub trait FromRadix10SignedChecked: FromRadix10Signed {
     /// assert_eq!((Some(42),2), i32::from_radix_10_signed_checked(b"42"));
     /// // Signs are allowed
     /// assert_eq!((Some(-42),3), i32::from_radix_10_signed_checked(b"-42"));
-    /// // Signs even on unsigned types
+    /// // -0 is ok, even for an unsigned type
     /// assert_eq!((Some(0),2), u32::from_radix_10_signed_checked(b"-0"));
+    /// // -1 is an Underflow
+    /// assert_eq!((None,2), u32::from_radix_10_signed_checked(b"-1"));
     /// // Negative values for unsigned types are handled as `None`.
     /// assert_eq!((None,3), u32::from_radix_10_signed_checked(b"-42"));
     /// // Leading zeros are allowed

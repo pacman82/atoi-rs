@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.0
+-----
+
+* The `atoi` function now supports parsing signed integers. Use the `FromRadix10` trait directly if
+  you wish to not allow leading `+` or `-` signs.
+
 0.3.3
 -----
 
