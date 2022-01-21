@@ -34,5 +34,5 @@ fn atoi_with_rest<I: FromRadix10>(text: &[u8]) -> Option<(&[u8], I)> {
 }
 ```
 
-This [crate](https://www.crates.io/crates/atoi) as more to offer! Check out the full documentation
+This [crate](https://www.crates.io/crates/atoi) has more to offer! Check out the full documentation
 at [docs.rs](https://docs.rs/atoi).
