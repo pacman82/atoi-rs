@@ -1,0 +1,26 @@
+# Verify that atoi still works with Rust 1.56.0
+name: Test complier version
+
+on: [push, pull_request]
+
+
+jobs:
+
+  linux:
+    name: Test compatibility with older Rust toolchain
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+        # Verify that atoi still works with Rust 1.56.0 (version which introduced editon 2021)
+      - name: Install Rust toolchain 1.56.0
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: "1.56.0"
+          default: true
+          override: true
+          
+      - name: Test with Rust 1.56.0
+        run: cargo test
