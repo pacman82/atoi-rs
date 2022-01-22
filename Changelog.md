@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.0.0
+-----
+
+* Minimal supported compiler is Rust 1.56.0
+* Changed Rust edition to 2021
+* Stabilized interface
+
 0.4.0
 -----
 
