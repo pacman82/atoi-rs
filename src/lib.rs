@@ -1,4 +1,4 @@
-//! A crate for parsing integers directly form ASCII (`[u8]`) without encoding them into utf8
+//! A crate for parsing integers directly from ASCII (`[u8]`) without encoding them into utf8
 //! first. The name is inspired by the famous C function.
 //!
 //! Using `str::from_utf8` and `str::parse`
