@@ -1,12 +1,12 @@
 [package]
 name = "atoi"
-version = "1.0.0"
+version = "2.0.0"
 authors = ["Markus Klein"]
 license = "MIT"
 repository = "https://github.com/pacman82/atoi-rs"
 documentation = "https://docs.rs/atoi/"
 edition = "2021"
-rust-version = "1.56.0"
+rust-version = "1.57.0"
 
 # A short blurb about the package. This is not rendered in any format when
 # uploaded to crates.io (aka this is not markdown).
