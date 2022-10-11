@@ -1,10 +1,11 @@
 Changelog
 =========
 
-2.0.0 (next)
+2.0.0
 -----
 
 * Minimal supported compiler is Rust 1.57.0
+* Support for `no-std` by making `std` a default feature which can be opted out of.
 
 1.0.0
 -----
