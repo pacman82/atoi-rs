@@ -13,8 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Test
+      - name: Test std
         run: cargo test
+
+      - name: Test no-std
+        run: cargo test --no-default-features
 
       - name: Bench
         run: cargo bench
