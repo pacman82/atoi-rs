@@ -27,8 +27,12 @@ categories = ["parsing"]
 # crates.io will render this file and place the result on the crate's page.
 readme = "README.md"
 
+[features]
+default = ["std"]
+std = ["num-traits/std"]
+
 [dependencies]
-num-traits= "0.2.14"
+num-traits = { version = "0.2.14", default-features = false }
 
 [dev-dependencies]
 criterion = "0.4.0"

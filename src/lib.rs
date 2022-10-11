@@ -19,12 +19,13 @@
 //!     }
 //! }
 //! ```
+#![cfg_attr(not(std), no_std)]
 
 use num_traits::{
     ops::checked::{CheckedAdd, CheckedMul},
     Bounded, CheckedSub, One, Signed, Zero,
 };
-use std::{
+use core::{
     cmp::{max, min},
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
 };
