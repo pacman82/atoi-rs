@@ -521,11 +521,21 @@ fn ascii_to_hexdigit<I>(character: u8) -> Option<I>
 where
     I: Zero + One + FromPrimitive,
 {
-    match character {
-        b'0'..=b'9' => I::from_u8(character - b'0'),
-        b'A'..=b'F' => I::from_u8(10 + (character - b'A')),
-        b'a'..=b'f' => I::from_u8(10 + (character - b'a')),
-        _ => None,
+    // Unsetting the 6th bit converts ASCII alphabetic lowercase to uppercase.
+    //
+    // b'A' = 0b_0100_0001 (decimal 65), b'F' = 0b_0100_0110 (decimal 70)
+    // b'a' = 0b_0110_0001 (decimal 97), b'f' = 0b_0110_0110 (decimal 102)
+    // b'a' & 0b_1101_1111 converts 'a' to 'A'.
+    let mask = 0b_1101_1111;
+
+    if matches!(character, b'0'..=b'9') {
+        I::from_u8(character - b'0')
+    } else if matches!(character & mask, b'A'..=b'F') {
+        // Subtract 55 from the result to map the character to its hexadecimal
+        // value: (65 to 70) - 55 => 10 to 15
+        I::from_u8((character & mask) - 55)
+    } else {
+        None
     }
 }
 
@@ -670,6 +680,12 @@ mod test {
         for (decimal, byte) in (0..=9).zip(b'0'..=b'9') {
             assert_eq!(Some(decimal), ascii_to_digit(byte));
         }
+
+        // Assert that 0..=255 only returns valid decimals
+        let decimals = 0_u8..=9;
+        assert!((u8::MIN..=u8::MAX)
+            .filter_map(|n| ascii_to_digit::<u8>(n))
+            .eq(decimals));
     }
 
     #[test]
@@ -677,11 +693,18 @@ mod test {
         for (decimal, byte) in (0x0..=0x9).zip(b'0'..=b'9') {
             assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
         }
-        for (decimal, byte) in (0xA..=0xF).zip(b'a'..=b'f') {
-            assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
-        }
         for (decimal, byte) in (0xA..=0xF).zip(b'A'..=b'F') {
             assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
         }
+        for (decimal, byte) in (0xA..=0xF).zip(b'a'..=b'f') {
+            assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
+        }
+
+        // Iterator over the hexadecimals '0x0'..='0x9':'0xA'..='0xF',
+        // chaining '0xA'..='0xF' an additional time for lowercase b'a'..=b'f'
+        let hexadecimals = (0_u8..=9).chain(0xA..=0xF).chain(0xA..=0xF);
+        assert!((u8::MIN..=u8::MAX)
+            .filter_map(|n| ascii_to_hexdigit::<u8>(n))
+            .eq(hexadecimals));
     }
 }
