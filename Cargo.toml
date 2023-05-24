@@ -35,7 +35,7 @@ std = ["num-traits/std"]
 num-traits = { version = "0.2.14", default-features = false }
 
 [dev-dependencies]
-criterion = "0.4.0"
+criterion = "0.5.0"
 
 [[bench]]
 name = "benches"
