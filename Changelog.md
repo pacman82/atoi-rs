@@ -1,6 +1,11 @@
 Changelog
 =========
 
+3.0.0 (next)
+-----
+
+* Minimal supported compiler is Rust 1.60.0
+
 2.0.0
 -----
 
