@@ -68,11 +68,26 @@ pub fn i32_positive_four_digit_number(c: &mut Criterion) {
     });
 }
 
-pub fn through_utf8(c: &mut Criterion) {
-    c.bench_function("via UTF-8", |b| {
+pub fn i128_signed_four_digit_number(c: &mut Criterion) {
+    c.bench_function("signed i128 four digit number", |b| {
+        b.iter(|| i128::from_radix_10_signed(black_box(b"1996")))
+    });
+}
+
+pub fn u32_through_utf8(c: &mut Criterion) {
+    c.bench_function("u32 via UTF-8", |b| {
         b.iter(|| {
             let s = str::from_utf8(black_box(b"1996")).unwrap();
             s.parse::<u32>().unwrap();
+        })
+    });
+}
+
+pub fn i128_through_utf8(c: &mut Criterion) {
+    c.bench_function("i128 via UTF-8", |b| {
+        b.iter(|| {
+            let s = str::from_utf8(black_box(b"1996")).unwrap();
+            s.parse::<i128>().unwrap();
         })
     });
 }
@@ -90,6 +105,8 @@ criterion_group!(
     i32_signed_four_digit_number,
     i32_negative_four_digit_number,
     i32_positive_four_digit_number,
-    through_utf8,
+    i128_signed_four_digit_number,
+    u32_through_utf8,
+    i128_through_utf8,
 );
 criterion_main!(benches);
