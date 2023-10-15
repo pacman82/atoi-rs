@@ -1,0 +1,71 @@
+use crate::{
+    FromRadix10, FromRadix10Checked, FromRadix10Signed, FromRadix10SignedChecked, FromRadix16,
+    FromRadix16Checked, Integer, MaxNumDigits,
+};
+
+macro_rules! impl_traits_using_integer {
+    ($t:ident) => {
+        impl FromRadix10 for $t {
+            fn from_radix_10(text: &[u8]) -> (Self, usize) {
+                let (Integer(i), p) = Integer::<Self>::from_radix_10(text);
+                (i, p)
+            }
+        }
+
+        impl FromRadix10Signed for $t {
+            fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
+                let (Integer(i), p) = Integer::<Self>::from_radix_10_signed(text);
+                (i, p)
+            }
+        }
+
+        impl MaxNumDigits for $t {
+            fn max_num_digits(radix: Self) -> usize {
+                Integer::<Self>::max_num_digits(Integer(radix))
+            }
+
+            fn max_num_digits_negative(radix: Self) -> usize {
+                Integer::<Self>::max_num_digits_negative(Integer(radix))
+            }
+        }
+
+        impl FromRadix10Checked for $t {
+            fn from_radix_10_checked(text: &[u8]) -> (Option<Self>, usize) {
+                let (o, p) = Integer::<Self>::from_radix_10_checked(text);
+                (o.map(|i| i.0), p)
+            }
+        }
+
+        impl FromRadix10SignedChecked for $t {
+            fn from_radix_10_signed_checked(text: &[u8]) -> (Option<Self>, usize) {
+                let (o, p) = Integer::<Self>::from_radix_10_signed_checked(text);
+                (o.map(|i| i.0), p)
+            }
+        }
+
+        impl FromRadix16 for $t {
+            fn from_radix_16(text: &[u8]) -> (Self, usize) {
+                let (Integer(i), p) = Integer::<Self>::from_radix_16(text);
+                (i, p)
+            }
+        }
+
+        impl FromRadix16Checked for $t {
+            fn from_radix_16_checked(text: &[u8]) -> (Option<Self>, usize) {
+                let (o, p) = Integer::<Self>::from_radix_16_checked(text);
+                (o.map(|i| i.0), p)
+            }
+        }
+    };
+}
+
+impl_traits_using_integer!(i8);
+impl_traits_using_integer!(u8);
+impl_traits_using_integer!(i16);
+impl_traits_using_integer!(u16);
+impl_traits_using_integer!(i32);
+impl_traits_using_integer!(u32);
+impl_traits_using_integer!(i64);
+impl_traits_using_integer!(u64);
+impl_traits_using_integer!(i128);
+impl_traits_using_integer!(u128);
