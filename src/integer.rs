@@ -1,8 +1,14 @@
-use core::{ops::{AddAssign, MulAssign, SubAssign, DivAssign}, cmp::{max, min}};
+use core::{
+    cmp::{max, min},
+    ops::{AddAssign, DivAssign, MulAssign, SubAssign},
+};
 
-use num_traits::{Zero, One, CheckedAdd, CheckedSub, CheckedMul, Bounded};
+use num_traits::{Bounded, CheckedAdd, CheckedMul, CheckedSub, One, Zero};
 
-use crate::{FromRadix10, FromRadix10Signed, Sign, FromRadix10SignedChecked, MaxNumDigits, FromRadix10Checked, FromRadix16, FromRadix16Checked};
+use crate::{
+    FromDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed, FromRadix10SignedChecked,
+    FromRadix16, FromRadix16Checked, MaxNumDigits, Sign,
+};
 
 /// Wrapper which implements the traits [`crate::FromRadix10`], [`crate::FromRadix10Checked`],
 /// [`crate::FromRadix16`] and [`crate::FromRadix16Checked`] for any inductive type. I.e. a type
@@ -17,9 +23,9 @@ where
         let mut index = 0;
         let mut number = I::zero();
         while index != text.len() {
-            if let Some(digit) = ascii_to_digit(text[index]) {
+            if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                 number *= nth(10);
-                number += digit;
+                number += digit.0;
                 index += 1;
             } else {
                 break;
@@ -52,9 +58,9 @@ where
         match sign {
             Sign::Plus => {
                 while index != text.len() {
-                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number *= nth(10);
-                        number += digit;
+                        number += digit.0;
                         index += 1;
                     } else {
                         break;
@@ -63,9 +69,9 @@ where
             }
             Sign::Minus => {
                 while index != text.len() {
-                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number *= nth(10);
-                        number -= digit;
+                        number -= digit.0;
                         index += 1;
                     } else {
                         break;
@@ -78,31 +84,24 @@ where
     }
 }
 
-/// Converts an ascii character to digit
-///
-/// # Example
-///
-/// ```
-/// use atoi::ascii_to_digit;
-/// assert_eq!(Some(5), ascii_to_digit(b'5'));
-/// assert_eq!(None, ascii_to_digit::<u32>(b'x'));
-/// ```
-pub fn ascii_to_digit<I>(character: u8) -> Option<I>
+impl<I> FromDigit for Integer<I>
 where
     I: Zero + One,
 {
-    match character {
-        b'0' => Some(nth(0)),
-        b'1' => Some(nth(1)),
-        b'2' => Some(nth(2)),
-        b'3' => Some(nth(3)),
-        b'4' => Some(nth(4)),
-        b'5' => Some(nth(5)),
-        b'6' => Some(nth(6)),
-        b'7' => Some(nth(7)),
-        b'8' => Some(nth(8)),
-        b'9' => Some(nth(9)),
-        _ => None,
+    fn from_digit(digit: u8) -> Option<Self> {
+        match digit {
+            b'0' => Some(Integer(nth(0))),
+            b'1' => Some(Integer(nth(1))),
+            b'2' => Some(Integer(nth(2))),
+            b'3' => Some(Integer(nth(3))),
+            b'4' => Some(Integer(nth(4))),
+            b'5' => Some(Integer(nth(5))),
+            b'6' => Some(Integer(nth(6))),
+            b'7' => Some(Integer(nth(7))),
+            b'8' => Some(Integer(nth(8))),
+            b'9' => Some(Integer(nth(9))),
+            _ => None,
+        }
     }
 }
 
@@ -152,9 +151,9 @@ where
                 let max_safe_digits = max(1, I::max_num_digits(nth(10))) - 1;
                 let max_safe_index = min(text.len(), max_safe_digits + offset);
                 while index != max_safe_index {
-                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number *= nth(10);
-                        number += digit;
+                        number += digit.0;
                         index += 1;
                     } else {
                         break;
@@ -163,9 +162,9 @@ where
                 // We parsed the digits, which do not need checking now lets see the next one:
                 let mut number = Some(number);
                 while index != text.len() {
-                    if let Some(digit) = ascii_to_digit(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number = number.and_then(|n| n.checked_mul(&nth(10)));
-                        number = number.and_then(|n| n.checked_add(&digit));
+                        number = number.and_then(|n| n.checked_add(&digit.0));
                         index += 1;
                     } else {
                         break;
@@ -177,9 +176,9 @@ where
                 let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
                 let max_safe_index = min(text.len(), max_safe_digits + offset);
                 while index != max_safe_index {
-                    if let Some(digit) = ascii_to_digit::<I>(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number *= nth(10);
-                        number -= digit;
+                        number -= digit.0;
                         index += 1;
                     } else {
                         break;
@@ -188,9 +187,9 @@ where
                 // We parsed the digits, which do not need checking now lets see the next one:
                 let mut number = Some(number);
                 while index != text.len() {
-                    if let Some(digit) = ascii_to_digit(text[index]) {
+                    if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                         number = number.and_then(|n| n.checked_mul(&nth(10)));
-                        number = number.and_then(|n| n.checked_sub(&digit));
+                        number = number.and_then(|n| n.checked_sub(&digit.0));
                         index += 1;
                     } else {
                         break;
@@ -212,9 +211,9 @@ where
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:
         while index != text.len() {
-            if let Some(digit) = ascii_to_digit(text[index]) {
+            if let Some(digit) = Integer::<I>::from_digit(text[index]) {
                 number = number.and_then(|n| n.checked_mul(&nth(10)));
-                number = number.and_then(|n| n.checked_add(&digit));
+                number = number.and_then(|n| n.checked_add(&digit.0));
                 index += 1;
             } else {
                 break;
