@@ -26,7 +26,7 @@ use num_traits::Signed;
 mod builtin;
 mod integer;
 
-pub use integer::{ascii_to_digit, Integer};
+pub use integer::Integer;
 
 /// Parses an integer from a slice.
 ///
@@ -326,6 +326,38 @@ impl Sign {
             Sign::Minus => -I::one(),
         }
     }
+}
+
+/// Construct an instance of a numerical type using the byte representation of a radix 10 digit,
+/// e.g. b'7' -> 7.
+pub trait FromDigit: Sized {
+    /// Convert ASCII digit (e.g. b'7) into numeric representation (`7`). `None` if the character
+    /// given does not represent a digit in ASCII.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use atoi::FromDigit;
+    /// assert_eq!(Some(5), u32::from_digit(b'5'));
+    /// assert_eq!(None, u32::from_digit(b'x'));
+    /// ```
+    fn from_digit(digit: u8) -> Option<Self>;
+}
+
+/// Converts an ascii character to digit
+///
+/// # Example
+///
+/// ```
+/// use atoi::ascii_to_digit;
+/// assert_eq!(Some(5), ascii_to_digit(b'5'));
+/// assert_eq!(None, ascii_to_digit::<u32>(b'x'));
+/// ```
+pub fn ascii_to_digit<I>(digit: u8) -> Option<I>
+where
+    I: FromDigit,
+{
+    I::from_digit(digit)
 }
 
 #[cfg(test)]
