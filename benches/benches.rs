@@ -1,4 +1,4 @@
-use atoi::{FromRadix10, FromRadix10Checked, FromRadix16, FromRadix16Checked, FromRadix10Signed};
+use atoi::{FromRadix10, FromRadix10Checked, FromRadix10Signed, FromRadix16, FromRadix16Checked};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use std::str;
 
