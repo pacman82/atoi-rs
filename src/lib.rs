@@ -344,6 +344,10 @@ pub trait FromDigit: Sized {
     fn from_digit(digit: u8) -> Option<Self>;
 }
 
+trait FromHexDigit: Sized {
+    fn from_hex_digit(digit: u8) -> Option<Self>;
+}
+
 /// Converts an ascii character to digit
 ///
 /// # Example
