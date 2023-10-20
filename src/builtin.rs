@@ -5,8 +5,10 @@
 
 use crate::{
     ascii_to_digit, FromDigit, FromHexDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed,
-    FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Integer, MaxNumDigits,
+    FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Integer, MaxNumDigits, Sign,
 };
+
+use core::cmp::{max, min};
 
 macro_rules! impl_traits_using_integer {
     ($t:ident) => {
@@ -29,8 +31,47 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix10Signed for $t {
             fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
-                let (Integer(i), p) = Integer::<Self>::from_radix_10_signed(text);
-                (i, p)
+                let mut index;
+                let mut number = 0;
+
+                let (sign, offset) = text
+                    .first()
+                    .and_then(|&byte| Sign::try_from(byte))
+                    .map(|sign| (sign, 1))
+                    .unwrap_or((Sign::Plus, 0));
+
+                index = offset;
+
+                // Having two dedicated loops for both the negative and the nonnegative case is rather
+                // verbose, yet performed up to 40% better then a more terse single loop with
+                // `number += digit * signum`.
+
+                match sign {
+                    Sign::Plus => {
+                        while index != text.len() {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number *= 10;
+                                number += digit;
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                    Sign::Minus => {
+                        while index != text.len() {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number *= 10;
+                                number -= digit;
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                (number, index)
             }
         }
 
@@ -46,8 +87,21 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix10Checked for $t {
             fn from_radix_10_checked(text: &[u8]) -> (Option<Self>, usize) {
-                let (o, p) = Integer::<Self>::from_radix_10_checked(text);
-                (o.map(|i| i.0), p)
+                let max_safe_digits = max(1, $t::max_num_digits_negative(10)) - 1;
+                let (number, mut index) =
+                    $t::from_radix_10(&text[..min(text.len(), max_safe_digits)]);
+                let mut number = Some(number);
+                // We parsed the digits, which do not need checking now lets see the next one:
+                while index != text.len() {
+                    if let Some(digit) = $t::from_digit(text[index]) {
+                        number = number.and_then(|n| n.checked_mul(10));
+                        number = number.and_then(|n| n.checked_add(digit));
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (number, index)
             }
         }
 
