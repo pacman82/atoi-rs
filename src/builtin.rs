@@ -4,7 +4,7 @@
 //! A generic implementation for "any integer" can still be invoked using the `Integer` wrapper.
 
 use crate::{
-    ascii_to_digit, FromDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed,
+    ascii_to_digit, FromDigit, FromHexDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed,
     FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Integer, MaxNumDigits,
 };
 
@@ -60,8 +60,18 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix16 for $t {
             fn from_radix_16(text: &[u8]) -> (Self, usize) {
-                let (Integer(i), p) = Integer::<Self>::from_radix_16(text);
-                (i, p)
+                let mut index = 0;
+                let mut number = 0;
+                while index != text.len() {
+                    if let Some(digit) = $t::from_hex_digit(text[index]) {
+                        number *= 16;
+                        number += digit;
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (number, index)
             }
         }
 
@@ -85,6 +95,30 @@ macro_rules! impl_traits_using_integer {
                     b'7' => Some(7),
                     b'8' => Some(8),
                     b'9' => Some(9),
+                    _ => None,
+                }
+            }
+        }
+
+        impl FromHexDigit for $t {
+            fn from_hex_digit(digit: u8) -> Option<Self> {
+                match digit {
+                    b'0' => Some(0),
+                    b'1' => Some(1),
+                    b'2' => Some(2),
+                    b'3' => Some(3),
+                    b'4' => Some(4),
+                    b'5' => Some(5),
+                    b'6' => Some(6),
+                    b'7' => Some(7),
+                    b'8' => Some(8),
+                    b'9' => Some(9),
+                    b'a' | b'A' => Some(10),
+                    b'b' | b'B' => Some(11),
+                    b'c' | b'C' => Some(12),
+                    b'd' | b'D' => Some(13),
+                    b'e' | b'E' => Some(14),
+                    b'f' | b'F' => Some(15),
                     _ => None,
                 }
             }
