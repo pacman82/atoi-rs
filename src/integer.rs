@@ -274,7 +274,7 @@ where
     I: Zero + One + FromRadix16 + CheckedMul + CheckedAdd + MaxNumDigits,
 {
     fn from_radix_16_checked(text: &[u8]) -> (Option<Self>, usize) {
-        let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
+        let max_safe_digits = max(1, I::max_num_digits_negative(nth(16))) - 1;
         let (number, mut index) = I::from_radix_16(&text[..min(text.len(), max_safe_digits)]);
         let mut number = Some(number);
         // We parsed the digits, which do not need checking now lets see the next one:

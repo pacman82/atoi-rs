@@ -107,8 +107,73 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix10SignedChecked for $t {
             fn from_radix_10_signed_checked(text: &[u8]) -> (Option<Self>, usize) {
-                let (o, p) = Integer::<Self>::from_radix_10_signed_checked(text);
-                (o.map(|i| i.0), p)
+                let mut index;
+                let mut number = 0;
+
+                let (sign, offset) = text
+                    .first()
+                    .and_then(|&byte| Sign::try_from(byte))
+                    .map(|sign| (sign, 1))
+                    .unwrap_or((Sign::Plus, 0));
+
+                index = offset;
+
+                // Having two dedicated loops for both the negative and the nonnegative case is rather
+                // verbose, yet performed up to 40% better then a more terse single loop with
+                // `number += digit * signum`.
+
+                match sign {
+                    Sign::Plus => {
+                        let max_safe_digits = max(1, $t::max_num_digits(10)) - 1;
+                        let max_safe_index = min(text.len(), max_safe_digits + offset);
+                        while index != max_safe_index {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number *= 10;
+                                number += digit;
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        // We parsed the digits, which do not need checking now lets see the next one:
+                        let mut number = Some(number);
+                        while index != text.len() {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number = number.and_then(|n| n.checked_mul(10));
+                                number = number.and_then(|n| n.checked_add(digit));
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        (number, index)
+                    }
+                    Sign::Minus => {
+                        let max_safe_digits = max(1, $t::max_num_digits_negative(10)) - 1;
+                        let max_safe_index = min(text.len(), max_safe_digits + offset);
+                        while index != max_safe_index {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number *= 10;
+                                number -= digit;
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        // We parsed the digits, which do not need checking now lets see the next one:
+                        let mut number = Some(number);
+                        while index != text.len() {
+                            if let Some(digit) = $t::from_digit(text[index]) {
+                                number = number.and_then(|n| n.checked_mul(10));
+                                number = number.and_then(|n| n.checked_sub(digit));
+                                index += 1;
+                            } else {
+                                break;
+                            }
+                        }
+                        (number, index)
+                    }
+                }
             }
         }
 
@@ -131,8 +196,21 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix16Checked for $t {
             fn from_radix_16_checked(text: &[u8]) -> (Option<Self>, usize) {
-                let (o, p) = Integer::<Self>::from_radix_16_checked(text);
-                (o.map(|i| i.0), p)
+                let max_safe_digits = max(1, $t::max_num_digits_negative(16)) - 1;
+                let (number, mut index) =
+                    $t::from_radix_16(&text[..min(text.len(), max_safe_digits)]);
+                let mut number = Some(number);
+                // We parsed the digits, which do not need checking now lets see the next one:
+                while index != text.len() {
+                    if let Some(digit) = $t::from_hex_digit(text[index]) {
+                        number = number.and_then(|n| n.checked_mul(16));
+                        number = number.and_then(|n| n.checked_add(digit));
+                        index += 1;
+                    } else {
+                        break;
+                    }
+                }
+                (number, index)
             }
         }
 
