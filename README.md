@@ -29,7 +29,7 @@ use atoi::FromRadix10;
 fn atoi_with_rest<I: FromRadix10>(text: &[u8]) -> Option<(&[u8], I)> {
     match I::from_radix_10(text) {
         (_, 0) => None,
-        (n, used) => Some((&[used..], n)),
+        (n, used) => Some((&text[used..], n)),
     }
 }
 ```
