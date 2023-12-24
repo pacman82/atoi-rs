@@ -36,6 +36,7 @@ num-traits = { version = "0.2.14", default-features = false }
 
 [dev-dependencies]
 criterion = "0.5.1"
+proptest = "1.4.0"
 
 [[bench]]
 name = "benches"
