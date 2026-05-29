@@ -23,7 +23,7 @@
 
 use num_traits::{
     ops::checked::{CheckedAdd, CheckedMul},
-    Bounded, CheckedSub, One, Signed, Zero,
+    Bounded, CheckedSub, FromPrimitive, One, Signed, Zero,
 };
 use core::{
     cmp::{max, min},
@@ -332,26 +332,18 @@ where
 /// ```
 pub fn ascii_to_digit<I>(character: u8) -> Option<I>
 where
-    I: Zero + One,
+    I: Zero + One + FromPrimitive,
 {
-    match character {
-        b'0' => Some(nth(0)),
-        b'1' => Some(nth(1)),
-        b'2' => Some(nth(2)),
-        b'3' => Some(nth(3)),
-        b'4' => Some(nth(4)),
-        b'5' => Some(nth(5)),
-        b'6' => Some(nth(6)),
-        b'7' => Some(nth(7)),
-        b'8' => Some(nth(8)),
-        b'9' => Some(nth(9)),
-        _ => None,
+    if (b'0'..=b'9').contains(&character) {
+        I::from_u8(character - b'0')
+    } else {
+        None
     }
 }
 
 impl<I> FromRadix10 for I
 where
-    I: Zero + One + AddAssign + MulAssign,
+    I: Zero + One + FromPrimitive + AddAssign + MulAssign,
 {
     fn from_radix_10(text: &[u8]) -> (Self, usize) {
         let mut index = 0;
@@ -371,7 +363,7 @@ where
 
 impl<I> FromRadix10Signed for I
 where
-    I: Zero + One + AddAssign + SubAssign + MulAssign,
+    I: Zero + One + AddAssign + SubAssign + MulAssign + FromPrimitive,
 {
     fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
         let mut index;
@@ -428,7 +420,8 @@ where
         + CheckedAdd
         + CheckedSub
         + CheckedMul
-        + MaxNumDigits,
+        + MaxNumDigits
+        + FromPrimitive,
 {
     fn from_radix_10_signed_checked(text: &[u8]) -> (Option<Self>, usize) {
         let mut index;
@@ -503,7 +496,7 @@ where
 
 impl<I> FromRadix10Checked for I
 where
-    I: Zero + One + FromRadix10 + CheckedMul + CheckedAdd + MaxNumDigits,
+    I: Zero + One + FromRadix10 + CheckedMul + CheckedAdd + MaxNumDigits + FromPrimitive,
 {
     fn from_radix_10_checked(text: &[u8]) -> (Option<I>, usize) {
         let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
@@ -526,32 +519,29 @@ where
 /// Converts an ascii character to digit
 fn ascii_to_hexdigit<I>(character: u8) -> Option<I>
 where
-    I: Zero + One,
+    I: Zero + One + FromPrimitive,
 {
-    match character {
-        b'0' => Some(nth(0)),
-        b'1' => Some(nth(1)),
-        b'2' => Some(nth(2)),
-        b'3' => Some(nth(3)),
-        b'4' => Some(nth(4)),
-        b'5' => Some(nth(5)),
-        b'6' => Some(nth(6)),
-        b'7' => Some(nth(7)),
-        b'8' => Some(nth(8)),
-        b'9' => Some(nth(9)),
-        b'a' | b'A' => Some(nth(10)),
-        b'b' | b'B' => Some(nth(11)),
-        b'c' | b'C' => Some(nth(12)),
-        b'd' | b'D' => Some(nth(13)),
-        b'e' | b'E' => Some(nth(14)),
-        b'f' | b'F' => Some(nth(15)),
-        _ => None,
+    // Unsetting the 6th bit converts ASCII alphabetic lowercase to uppercase.
+    //
+    // b'A' = 0b_0100_0001 (decimal 65), b'F' = 0b_0100_0110 (decimal 70)
+    // b'a' = 0b_0110_0001 (decimal 97), b'f' = 0b_0110_0110 (decimal 102)
+    // b'a' & 0b_1101_1111 converts 'a' to 'A'.
+    let mask = 0b_1101_1111;
+
+    if matches!(character, b'0'..=b'9') {
+        I::from_u8(character - b'0')
+    } else if matches!(character & mask, b'A'..=b'F') {
+        // Subtract 55 from the result to map the character to its hexadecimal
+        // value: (65 to 70) - 55 => 10 to 15
+        I::from_u8((character & mask) - 55)
+    } else {
+        None
     }
 }
 
 impl<I> FromRadix16 for I
 where
-    I: Zero + One + AddAssign + MulAssign,
+    I: Zero + One + FromPrimitive + AddAssign + MulAssign,
 {
     fn from_radix_16(text: &[u8]) -> (Self, usize) {
         let mut index = 0;
@@ -571,7 +561,7 @@ where
 
 impl<I> FromRadix16Checked for I
 where
-    I: Zero + One + FromRadix16 + CheckedMul + CheckedAdd + MaxNumDigits,
+    I: Zero + One + FromRadix16 + CheckedMul + CheckedAdd + MaxNumDigits + FromPrimitive,
 {
     fn from_radix_16_checked(text: &[u8]) -> (Option<I>, usize) {
         let max_safe_digits = max(1, I::max_num_digits_negative(nth(10))) - 1;
@@ -683,5 +673,38 @@ mod test {
         assert_eq!((None, 4), u8::from_radix_16_checked(b"1000"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19!Blub"));
+    }
+
+    #[test]
+    fn ascii_to_digit_check() {
+        for (decimal, byte) in (0..=9).zip(b'0'..=b'9') {
+            assert_eq!(Some(decimal), ascii_to_digit(byte));
+        }
+
+        // Assert that 0..=255 only returns valid decimals
+        let decimals = 0_u8..=9;
+        assert!((u8::MIN..=u8::MAX)
+            .filter_map(|n| ascii_to_digit::<u8>(n))
+            .eq(decimals));
+    }
+
+    #[test]
+    fn ascii_to_hexdigit_check() {
+        for (decimal, byte) in (0x0..=0x9).zip(b'0'..=b'9') {
+            assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
+        }
+        for (decimal, byte) in (0xA..=0xF).zip(b'A'..=b'F') {
+            assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
+        }
+        for (decimal, byte) in (0xA..=0xF).zip(b'a'..=b'f') {
+            assert_eq!(Some(decimal), ascii_to_hexdigit(byte));
+        }
+
+        // Iterator over the hexadecimals '0x0'..='0x9':'0xA'..='0xF',
+        // chaining '0xA'..='0xF' an additional time for lowercase b'a'..=b'f'
+        let hexadecimals = (0_u8..=9).chain(0xA..=0xF).chain(0xA..=0xF);
+        assert!((u8::MIN..=u8::MAX)
+            .filter_map(|n| ascii_to_hexdigit::<u8>(n))
+            .eq(hexadecimals));
     }
 }
