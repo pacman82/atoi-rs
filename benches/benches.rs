@@ -1,6 +1,6 @@
-use atoi::{FromRadix10, FromRadix10Checked, FromRadix16, FromRadix16Checked, FromRadix10Signed};
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use std::str;
+use atoi::{FromRadix10, FromRadix10Checked, FromRadix10Signed, FromRadix16, FromRadix16Checked};
+use criterion::{Criterion, criterion_group, criterion_main};
+use std::{hint::black_box, str};
 
 pub fn i32_four_digit_number(c: &mut Criterion) {
     c.bench_function("i32 four digit number", |b| {

@@ -19,15 +19,15 @@
 //!     }
 //! }
 //! ```
-#![cfg_attr(not(std), no_std)]
+#![cfg_attr(not(feature = "std"), no_std)]
 
-use num_traits::{
-    ops::checked::{CheckedAdd, CheckedMul},
-    Bounded, CheckedSub, One, Signed, Zero,
-};
 use core::{
     cmp::{max, min},
     ops::{AddAssign, DivAssign, MulAssign, SubAssign},
+};
+use num_traits::{
+    Bounded, CheckedSub, One, Signed, Zero,
+    ops::checked::{CheckedAdd, CheckedMul},
 };
 
 /// Parses an integer from a slice.
