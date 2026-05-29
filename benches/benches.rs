@@ -93,8 +93,9 @@ pub fn i128_through_utf8(c: &mut Criterion) {
 }
 
 criterion_group!(
-    benches,
-    i32_four_digit_number,
+    name = benches;
+    config = Criterion::default().significance_level(0.01).sample_size(1000);
+    targets = i32_four_digit_number,
     i32_four_digit_number_checked,
     u32_four_digit_number,
     u32_four_digit_number_checked,
