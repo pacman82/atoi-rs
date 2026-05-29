@@ -1,10 +1,12 @@
 name: Build and test
 
-on: [push, pull_request]
-
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-
   linux:
     name: Test & Bench Linux
     runs-on: ubuntu-latest
@@ -21,4 +23,3 @@ jobs:
 
       - name: Bench
         run: cargo bench
-
