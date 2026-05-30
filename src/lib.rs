@@ -61,6 +61,7 @@ pub use integer::Integer;
 /// # Return
 ///
 /// Returns a a number if the slice started with a number, otherwise `None` is returned.
+#[inline]
 pub fn atoi<I>(text: &[u8]) -> Option<I>
 where
     I: FromRadix10SignedChecked,
