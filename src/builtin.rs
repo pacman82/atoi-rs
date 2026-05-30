@@ -15,6 +15,7 @@ use core::cmp::min;
 macro_rules! impl_traits_using_integer {
     ($t:ident) => {
         impl FromRadix10 for $t {
+            #[inline]
             fn from_radix_10(text: &[u8]) -> (Self, usize) {
                 let mut index = 0;
                 let mut number = 0;
@@ -32,6 +33,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromRadix10Signed for $t {
+            #[inline]
             fn from_radix_10_signed(text: &[u8]) -> (Self, usize) {
                 let mut index;
                 let mut number = 0;
@@ -78,6 +80,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromRadix10Checked for $t {
+            #[inline]
             fn from_radix_10_checked(text: &[u8]) -> (Option<Self>, usize) {
                 let (number, mut index) = $t::from_radix_10(
                     &text[..min(text.len(), $t::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10)],
@@ -98,6 +101,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromRadix10SignedChecked for $t {
+            #[inline]
             fn from_radix_10_signed_checked(text: &[u8]) -> (Option<Self>, usize) {
                 let mut index;
                 let mut number = 0;
@@ -174,6 +178,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromRadix16 for $t {
+            #[inline]
             fn from_radix_16(text: &[u8]) -> (Self, usize) {
                 let mut index = 0;
                 let mut number = 0;
@@ -191,6 +196,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromRadix16Checked for $t {
+            #[inline]
             fn from_radix_16_checked(text: &[u8]) -> (Option<Self>, usize) {
                 let (number, mut index) = $t::from_radix_16(
                     &text[..min(text.len(), $t::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16)],
@@ -211,6 +217,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromDigit for $t {
+            #[inline]
             fn from_digit(digit: u8) -> Option<Self> {
                 match digit {
                     b'0' => Some(0),
@@ -229,6 +236,7 @@ macro_rules! impl_traits_using_integer {
         }
 
         impl FromHexDigit for $t {
+            #[inline]
             fn from_hex_digit(digit: u8) -> Option<Self> {
                 // Unsetting the 6th bit converts ASCII alphabetic lowercase to uppercase.
                 //
