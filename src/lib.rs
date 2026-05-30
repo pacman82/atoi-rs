@@ -371,22 +371,22 @@ mod test {
 
     #[test]
     fn max_digits() {
-        assert_eq!(10, i32::max_num_digits(10));
-        assert_eq!(10, u32::max_num_digits(10));
-        assert_eq!(19, i64::max_num_digits(10));
-        assert_eq!(20, u64::max_num_digits(10));
-        assert_eq!(3, u8::max_num_digits(10));
-        assert_eq!(3, i8::max_num_digits(10));
+        assert_eq!(10, Integer::<i32>::max_num_digits(Integer(10)));
+        assert_eq!(10, Integer::<u32>::max_num_digits(Integer(10)));
+        assert_eq!(19, Integer::<i64>::max_num_digits(Integer(10)));
+        assert_eq!(20, Integer::<u64>::max_num_digits(Integer(10)));
+        assert_eq!(3, Integer::<u8>::max_num_digits(Integer(10)));
+        assert_eq!(3, Integer::<i8>::max_num_digits(Integer(10)));
     }
 
     #[test]
     fn max_digits_negative() {
-        assert_eq!(10, i32::max_num_digits_negative(10));
-        assert_eq!(0, u32::max_num_digits_negative(10));
-        assert_eq!(19, i64::max_num_digits_negative(10));
-        assert_eq!(0, u64::max_num_digits_negative(10));
-        assert_eq!(0, u8::max_num_digits_negative(10));
-        assert_eq!(3, i8::max_num_digits_negative(10));
+        assert_eq!(10, Integer::<i32>::max_num_digits_negative(Integer(10)));
+        assert_eq!(0, Integer::<u32>::max_num_digits_negative(Integer(10)));
+        assert_eq!(19, Integer::<i64>::max_num_digits_negative(Integer(10)));
+        assert_eq!(0, Integer::<u64>::max_num_digits_negative(Integer(10)));
+        assert_eq!(0, Integer::<u8>::max_num_digits_negative(Integer(10)));
+        assert_eq!(3, Integer::<i8>::max_num_digits_negative(Integer(10)));
     }
 
     #[test]
