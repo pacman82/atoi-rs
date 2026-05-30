@@ -228,7 +228,7 @@ fn ascii_to_hexdigit<I>(character: u8) -> Option<I>
 where
     I: Zero + One,
 {
-    match character {
+    match character.to_ascii_uppercase() {
         b'0' => Some(nth(0)),
         b'1' => Some(nth(1)),
         b'2' => Some(nth(2)),
@@ -239,12 +239,12 @@ where
         b'7' => Some(nth(7)),
         b'8' => Some(nth(8)),
         b'9' => Some(nth(9)),
-        b'a' | b'A' => Some(nth(10)),
-        b'b' | b'B' => Some(nth(11)),
-        b'c' | b'C' => Some(nth(12)),
-        b'd' | b'D' => Some(nth(13)),
-        b'e' | b'E' => Some(nth(14)),
-        b'f' | b'F' => Some(nth(15)),
+        b'A' => Some(nth(10)),
+        b'B' => Some(nth(11)),
+        b'C' => Some(nth(12)),
+        b'D' => Some(nth(13)),
+        b'E' => Some(nth(14)),
+        b'F' => Some(nth(15)),
         _ => None,
     }
 }

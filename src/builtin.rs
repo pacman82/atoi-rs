@@ -9,6 +9,8 @@ use crate::{
     ascii_to_digit,
 };
 
+use num_traits::FromPrimitive;
+
 use core::cmp::{max, min};
 
 macro_rules! impl_traits_using_integer {
@@ -235,24 +237,21 @@ macro_rules! impl_traits_using_integer {
 
         impl FromHexDigit for $t {
             fn from_hex_digit(digit: u8) -> Option<Self> {
-                match digit {
-                    b'0' => Some(0),
-                    b'1' => Some(1),
-                    b'2' => Some(2),
-                    b'3' => Some(3),
-                    b'4' => Some(4),
-                    b'5' => Some(5),
-                    b'6' => Some(6),
-                    b'7' => Some(7),
-                    b'8' => Some(8),
-                    b'9' => Some(9),
-                    b'a' | b'A' => Some(10),
-                    b'b' | b'B' => Some(11),
-                    b'c' | b'C' => Some(12),
-                    b'd' | b'D' => Some(13),
-                    b'e' | b'E' => Some(14),
-                    b'f' | b'F' => Some(15),
-                    _ => None,
+                // Unsetting the 6th bit converts ASCII alphabetic lowercase to uppercase.
+                //
+                // b'A' = 0b_0100_0001 (decimal 65), b'F' = 0b_0100_0110 (decimal 70)
+                // b'a' = 0b_0110_0001 (decimal 97), b'f' = 0b_0110_0110 (decimal 102)
+                // b'a' & 0b_1101_1111 converts 'a' to 'A'.
+                let mask = 0b_1101_1111;
+
+                if matches!(digit, b'0'..=b'9') {
+                    $t::from_u8(digit - b'0')
+                } else if matches!(digit & mask, b'A'..=b'F') {
+                    // Subtract 55 from the result to map the character to its hexadecimal
+                    // value: (65 to 70) - 55 => 10 to 15
+                    $t::from_u8((digit & mask) - 55)
+                } else {
+                    None
                 }
             }
         }
