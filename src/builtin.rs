@@ -6,7 +6,6 @@
 use crate::{
     FromDigit, FromHexDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed,
     FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Integer, MaxNumDigits, Sign,
-    ascii_to_digit,
 };
 
 use num_traits::FromPrimitive;
@@ -20,7 +19,7 @@ macro_rules! impl_traits_using_integer {
                 let mut index = 0;
                 let mut number = 0;
                 while index != text.len() {
-                    if let Some(digit) = ascii_to_digit::<$t>(text[index]) {
+                    if let Some(digit) = $t::from_digit(text[index]) {
                         number *= 10;
                         number += digit;
                         index += 1;

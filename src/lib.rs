@@ -409,4 +409,11 @@ mod test {
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19!Blub"));
     }
+
+    #[test]
+    fn ascii_to_digit_wrapper() {
+        assert_eq!(Some(0), ascii_to_digit(b'0'));
+        assert_eq!(Some(9), ascii_to_digit(b'9'));
+        assert_eq!(None, ascii_to_digit::<u8>(b'!'));
+    }
 }
