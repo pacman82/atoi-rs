@@ -5,12 +5,12 @@
 
 use crate::{
     FromDigit, FromHexDigit, FromRadix10, FromRadix10Checked, FromRadix10Signed,
-    FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Integer, MaxNumDigits, Sign,
+    FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Sign,
 };
 
 use num_traits::FromPrimitive;
 
-use core::cmp::{max, min};
+use core::cmp::min;
 
 macro_rules! impl_traits_using_integer {
     ($t:ident) => {
@@ -77,21 +77,11 @@ macro_rules! impl_traits_using_integer {
             }
         }
 
-        impl MaxNumDigits for $t {
-            fn max_num_digits(radix: Self) -> usize {
-                Integer::<Self>::max_num_digits(Integer(radix))
-            }
-
-            fn max_num_digits_negative(radix: Self) -> usize {
-                Integer::<Self>::max_num_digits_negative(Integer(radix))
-            }
-        }
-
         impl FromRadix10Checked for $t {
             fn from_radix_10_checked(text: &[u8]) -> (Option<Self>, usize) {
-                let max_safe_digits = max(1, $t::max_num_digits_negative(10)) - 1;
-                let (number, mut index) =
-                    $t::from_radix_10(&text[..min(text.len(), max_safe_digits)]);
+                let (number, mut index) = $t::from_radix_10(
+                    &text[..min(text.len(), $t::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10)],
+                );
                 let mut number = Some(number);
                 // We parsed the digits, which do not need checking now lets see the next one:
                 while index != text.len() {
@@ -126,8 +116,10 @@ macro_rules! impl_traits_using_integer {
 
                 match sign {
                     Sign::Plus => {
-                        let max_safe_digits = max(1, $t::max_num_digits(10)) - 1;
-                        let max_safe_index = min(text.len(), max_safe_digits + offset);
+                        let max_safe_index = min(
+                            text.len(),
+                            $t::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10 + offset,
+                        );
                         while index != max_safe_index {
                             if let Some(digit) = $t::from_digit(text[index]) {
                                 number *= 10;
@@ -151,8 +143,10 @@ macro_rules! impl_traits_using_integer {
                         (number, index)
                     }
                     Sign::Minus => {
-                        let max_safe_digits = max(1, $t::max_num_digits_negative(10)) - 1;
-                        let max_safe_index = min(text.len(), max_safe_digits + offset);
+                        let max_safe_index = min(
+                            text.len(),
+                            $t::NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10 + offset,
+                        );
                         while index != max_safe_index {
                             if let Some(digit) = $t::from_digit(text[index]) {
                                 number *= 10;
@@ -198,9 +192,9 @@ macro_rules! impl_traits_using_integer {
 
         impl FromRadix16Checked for $t {
             fn from_radix_16_checked(text: &[u8]) -> (Option<Self>, usize) {
-                let max_safe_digits = max(1, $t::max_num_digits_negative(16)) - 1;
-                let (number, mut index) =
-                    $t::from_radix_16(&text[..min(text.len(), max_safe_digits)]);
+                let (number, mut index) = $t::from_radix_16(
+                    &text[..min(text.len(), $t::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16)],
+                );
                 let mut number = Some(number);
                 // We parsed the digits, which do not need checking now lets see the next one:
                 while index != text.len() {
@@ -267,3 +261,100 @@ impl_traits_using_integer!(i64);
 impl_traits_using_integer!(u64);
 impl_traits_using_integer!(i128);
 impl_traits_using_integer!(u128);
+
+// Num digits which are safe to parse without overflow
+trait SafeDigits {
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize;
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize;
+}
+
+impl SafeDigits for i8 {
+    // 127
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 2;
+    // 7F
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 1;
+    // -128
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 2;
+}
+
+impl SafeDigits for u8 {
+    // 255
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 2;
+    // FF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 2;
+    // 0
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
+
+impl SafeDigits for i16 {
+    // 32767
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 4;
+    // 7FFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 3;
+    // -32768
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 5;
+}
+
+impl SafeDigits for u16 {
+    // 65535
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 4;
+    // FFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 4;
+    // 0
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
+
+impl SafeDigits for i32 {
+    // 2147483647
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 9;
+    // 7FFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 7;
+    // -2147483648
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 9;
+}
+
+impl SafeDigits for u32 {
+    // 4294967295
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 9;
+    // FFFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 8;
+    // 0
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
+
+impl SafeDigits for i64 {
+    // 9223372036854775807
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 18;
+    // 7FFFFFFFFFFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 15;
+    // -9223372036854775808
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 18;
+}
+
+impl SafeDigits for u64 {
+    // 18446744073709551615
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 19;
+    // FFFFFFFFFFFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 16;
+    // 0
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
+
+impl SafeDigits for i128 {
+    // 170141183460469231731687303715884105727
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 38;
+    // 7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 31;
+    // -170141183460469231731687303715884105728
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 38;
+}
+
+impl SafeDigits for u128 {
+    // 340282366920938463463374607431768211455
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = 38;
+    // FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 32;
+    // 0
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
