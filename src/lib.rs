@@ -279,18 +279,6 @@ pub trait FromRadix10SignedChecked: FromRadix10Signed {
     fn from_radix_10_signed_checked(_: &[u8]) -> (Option<Self>, usize);
 }
 
-/// A bounded integer, whose representation can overflow and therefore can only store a maximum
-/// number of digits
-pub trait MaxNumDigits {
-    /// Given a representation with a radix character I, what is the maximum number of digits we can
-    /// parse without the integer overflowing for sure?
-    fn max_num_digits(radix: Self) -> usize;
-
-    /// Returns the maximum number of digits a negative representation of `I` can have depending on
-    /// `radix`.
-    fn max_num_digits_negative(radix: Self) -> usize;
-}
-
 /// Representation of a numerical sign
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Sign {
@@ -369,26 +357,6 @@ where
 mod test {
 
     use super::*;
-
-    #[test]
-    fn max_digits() {
-        assert_eq!(10, Integer::<i32>::max_num_digits(Integer(10)));
-        assert_eq!(10, Integer::<u32>::max_num_digits(Integer(10)));
-        assert_eq!(19, Integer::<i64>::max_num_digits(Integer(10)));
-        assert_eq!(20, Integer::<u64>::max_num_digits(Integer(10)));
-        assert_eq!(3, Integer::<u8>::max_num_digits(Integer(10)));
-        assert_eq!(3, Integer::<i8>::max_num_digits(Integer(10)));
-    }
-
-    #[test]
-    fn max_digits_negative() {
-        assert_eq!(10, Integer::<i32>::max_num_digits_negative(Integer(10)));
-        assert_eq!(0, Integer::<u32>::max_num_digits_negative(Integer(10)));
-        assert_eq!(19, Integer::<i64>::max_num_digits_negative(Integer(10)));
-        assert_eq!(0, Integer::<u64>::max_num_digits_negative(Integer(10)));
-        assert_eq!(0, Integer::<u8>::max_num_digits_negative(Integer(10)));
-        assert_eq!(3, Integer::<i8>::max_num_digits_negative(Integer(10)));
-    }
 
     #[test]
     fn checked_parsing() {
