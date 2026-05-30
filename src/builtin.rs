@@ -8,8 +8,6 @@ use crate::{
     FromRadix10SignedChecked, FromRadix16, FromRadix16Checked, Sign,
 };
 
-use num_traits::FromPrimitive;
-
 use core::cmp::min;
 
 macro_rules! impl_traits_using_integer {
@@ -219,18 +217,10 @@ macro_rules! impl_traits_using_integer {
         impl FromDigit for $t {
             #[inline]
             fn from_digit(digit: u8) -> Option<Self> {
-                match digit {
-                    b'0' => Some(0),
-                    b'1' => Some(1),
-                    b'2' => Some(2),
-                    b'3' => Some(3),
-                    b'4' => Some(4),
-                    b'5' => Some(5),
-                    b'6' => Some(6),
-                    b'7' => Some(7),
-                    b'8' => Some(8),
-                    b'9' => Some(9),
-                    _ => None,
+                if matches!(digit, b'0'..=b'9') {
+                    Some((digit - b'0') as $t)
+                } else {
+                    None
                 }
             }
         }
@@ -246,11 +236,11 @@ macro_rules! impl_traits_using_integer {
                 let mask = 0b_1101_1111;
 
                 if matches!(digit, b'0'..=b'9') {
-                    $t::from_u8(digit - b'0')
+                    Some((digit - b'0') as $t)
                 } else if matches!(digit & mask, b'A'..=b'F') {
                     // Subtract 55 from the result to map the character to its hexadecimal
                     // value: (65 to 70) - 55 => 10 to 15
-                    $t::from_u8((digit & mask) - 55)
+                    Some(((digit & mask) - 55) as $t)
                 } else {
                     None
                 }
