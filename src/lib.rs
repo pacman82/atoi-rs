@@ -401,6 +401,9 @@ mod test {
     #[test]
     fn checked_parsing_radix_16() {
         assert_eq!((Some(255), 2), u8::from_radix_16_checked(b"FF"));
+        assert_eq!((Some(255), 2), u8::from_radix_16_checked(b"ff"));
+        assert_eq!((Some(170), 2), u8::from_radix_16_checked(b"AA"));
+        assert_eq!((Some(170), 2), u8::from_radix_16_checked(b"aa"));
         assert_eq!((None, 3), u8::from_radix_16_checked(b"100"));
         assert_eq!((None, 4), u8::from_radix_16_checked(b"1000"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19"));
