@@ -286,15 +286,6 @@ enum Sign {
 
 impl Sign {
     /// Trys to convert an ascii character into a `Sign`
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use atoi::Sign;
-    /// assert_eq!(Some(Sign::Plus), Sign::try_from(b'+'));
-    /// assert_eq!(Some(Sign::Minus), Sign::try_from(b'-'));
-    /// assert_eq!(None, Sign::try_from(b'1'));
-    /// ```
     pub fn try_from(byte: u8) -> Option<Sign> {
         match byte {
             b'+' => Some(Sign::Plus),
@@ -371,5 +362,35 @@ mod test {
         assert_eq!(Some(0), ascii_to_digit(b'0'));
         assert_eq!(Some(9), ascii_to_digit(b'9'));
         assert_eq!(None, ascii_to_digit::<u8>(b'!'));
+    }
+
+    #[test]
+    fn empty() {
+        assert_eq!((Some(0), 0), u8::from_radix_10_checked(b""));
+        assert_eq!((Some(0), 0), u8::from_radix_16_checked(b""));
+        assert_eq!((0, 0), u8::from_radix_10(b""));
+        assert_eq!((0, 0), u8::from_radix_16(b""));
+        assert_eq!((0, 0), u8::from_radix_10_signed(b""));
+        assert_eq!((Some(0), 0), u8::from_radix_10_signed_checked(b""));
+    }
+
+    #[test]
+    fn plus() {
+        assert_eq!((Some(0), 0), u8::from_radix_10_checked(b"+"));
+        assert_eq!((Some(0), 0), u8::from_radix_16_checked(b"+"));
+        assert_eq!((0, 0), u8::from_radix_10(b"+"));
+        assert_eq!((0, 0), u8::from_radix_16(b"+"));
+        assert_eq!((0, 1), u8::from_radix_10_signed(b"+"));
+        assert_eq!((Some(0), 1), u8::from_radix_10_signed_checked(b"+"));
+    }
+
+    #[test]
+    fn minus() {
+        assert_eq!((Some(0), 0), u8::from_radix_10_checked(b"-"));
+        assert_eq!((Some(0), 0), u8::from_radix_16_checked(b"-"));
+        assert_eq!((0, 0), u8::from_radix_10(b"-"));
+        assert_eq!((0, 0), u8::from_radix_16(b"-"));
+        assert_eq!((0, 1), u8::from_radix_10_signed(b"-"));
+        assert_eq!((Some(0), 1), u8::from_radix_10_signed_checked(b"-"));
     }
 }
