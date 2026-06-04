@@ -1,5 +1,51 @@
 # Changelog
 
+## [3.0.0](https://github.com/pacman82/odbc-api/compare/2.0.0...3.0.0) - 2026-06-04
+
+### 🚀 Features
+
+- [**breaking**] Remove ascii_to_digit
+- [**breaking**] Remove trait MaxNumDigits from public interface
+
+  It is now an implementation detail of integer
+
+- [**breaking**] Introduce FromHexDigit
+- [**breaking**] Introduce from digit
+
+
+### 🚜 Refactor
+
+- [**breaking**] Builtin types implemented indpendent from Integer
+
+  Builtin typen no longer implement MaxNumDigits
+
+- [**breaking**] Minimal supported rust compiler now 1.94.1
+
+
+### 📚 Documentation
+
+- Document Benchmarking with native CPU instructions enabled
+
+
+### ⚡ Performance
+
+- Inline atoi
+- Inline from_radix_* functions for builtin types
+
+  Since these are no longer generic, we do not get the inlining for free.
+  Benchmarks would show significant regressions otherwise
+
+- Speed up hexdigit parsing by using masks to unify ascii cases
+
+  Thanks to okaneco for the idea
+
+
+
+### ⚙️ Miscellaneous Tasks
+
+- [**breaking**] Minimal toolchain is now 1.86.0
+- [**breaking**] Remove `Sign` from public interface
+
 
 ## 2.0.0
 
