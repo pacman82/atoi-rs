@@ -4,36 +4,25 @@
 
 ### 🚀 Features
 
+- [**breaking**] Minimal supported rust compiler now 1.86.0
 - [**breaking**] Remove ascii_to_digit
-- [**breaking**] Remove trait MaxNumDigits from public interface
+- [**breaking**] Remove trait MaxNumDigits
+- [**breaking**] Remove enumeration `Sign`
 
   It is now an implementation detail of integer
-
-- [**breaking**] Introduce FromHexDigit
-- [**breaking**] Introduce from digit
 
 
 ### 🚜 Refactor
 
-- [**breaking**] Builtin types implemented indpendent from Integer
-
-  Builtin typen no longer implement MaxNumDigits
-
-- [**breaking**] Minimal supported rust compiler now 1.94.1
-
-
-### 📚 Documentation
-
-- Document Benchmarking with native CPU instructions enabled
+- [**breaking**] `FromRadix10` and its sibling traits used to be implement for any type with a neutral element of addition `Zero`, its successor `One`, `AddAssign` and `MulAssign`. This allowed it to work not only for builtin types like `i32`, but also for big integer implementations from other crates. However, it made it also hard to optimize for builtin types. `FromRadix10` and its sibling traits `FromRadix10Signed`, `FromRadixSignedChecked`, `FromRadix16` are now explicitly implemented for builtin types. The generic implementation can still be used by wrapping the type in the new `Integer` wrapper.
 
 
 ### ⚡ Performance
 
-- Inline atoi
 - Inline from_radix_* functions for builtin types
 
   Since these are no longer generic, we do not get the inlining for free.
-  Benchmarks would show significant regressions otherwise
+  Benchmarks show significant regressions otherwise
 
 - Speed up hexdigit parsing by using masks to unify ascii cases
 
