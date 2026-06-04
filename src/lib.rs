@@ -300,30 +300,12 @@ impl Sign {
 trait FromDigit: Sized {
     /// Convert ASCII digit (e.g. b'7) into numeric representation (`7`). `None` if the character
     /// given does not represent a digit in ASCII.
-    ///
-    /// # Example
-    ///
-    /// ```
-    /// use atoi::FromDigit;
-    /// assert_eq!(Some(5), u32::from_digit(b'5'));
-    /// assert_eq!(None, u32::from_digit(b'x'));
-    /// ```
     fn from_digit(digit: u8) -> Option<Self>;
 }
 
 trait FromHexDigit: Sized {
     fn from_hex_digit(digit: u8) -> Option<Self>;
 }
-
-/// Converts an ascii character to digit
-///
-/// # Example
-///
-/// ```
-/// use atoi::ascii_to_digit;
-/// assert_eq!(Some(5), ascii_to_digit(b'5'));
-/// assert_eq!(None, ascii_to_digit::<u32>(b'x'));
-/// ```
 
 #[cfg(test)]
 mod test {
