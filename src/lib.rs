@@ -297,7 +297,7 @@ impl Sign {
 
 /// Construct an instance of a numerical type using the byte representation of a radix 10 digit,
 /// e.g. b'7' -> 7.
-pub trait FromDigit: Sized {
+trait FromDigit: Sized {
     /// Convert ASCII digit (e.g. b'7) into numeric representation (`7`). `None` if the character
     /// given does not represent a digit in ASCII.
     ///
@@ -324,12 +324,6 @@ trait FromHexDigit: Sized {
 /// assert_eq!(Some(5), ascii_to_digit(b'5'));
 /// assert_eq!(None, ascii_to_digit::<u32>(b'x'));
 /// ```
-pub fn ascii_to_digit<I>(digit: u8) -> Option<I>
-where
-    I: FromDigit,
-{
-    I::from_digit(digit)
-}
 
 #[cfg(test)]
 mod test {
@@ -355,13 +349,6 @@ mod test {
         assert_eq!((None, 4), u8::from_radix_16_checked(b"1000"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19"));
         assert_eq!((Some(25), 2), u8::from_radix_16_checked(b"19!Blub"));
-    }
-
-    #[test]
-    fn ascii_to_digit_wrapper() {
-        assert_eq!(Some(0), ascii_to_digit(b'0'));
-        assert_eq!(Some(9), ascii_to_digit(b'9'));
-        assert_eq!(None, ascii_to_digit::<u8>(b'!'));
     }
 
     #[test]
