@@ -6,7 +6,7 @@ license = "MIT"
 repository = "https://github.com/pacman82/atoi-rs"
 documentation = "https://docs.rs/atoi/"
 edition = "2024"
-rust-version = "1.94.1"
+rust-version = "1.86.0"
 
 # A short blurb about the package. This is not rendered in any format when
 # uploaded to crates.io (aka this is not markdown).
