@@ -21,8 +21,6 @@
 //! ```
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use num_traits::Signed;
-
 mod builtin;
 mod integer;
 
@@ -281,7 +279,7 @@ pub trait FromRadix10SignedChecked: FromRadix10Signed {
 
 /// Representation of a numerical sign
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Sign {
+enum Sign {
     Plus,
     Minus,
 }
@@ -302,17 +300,6 @@ impl Sign {
             b'+' => Some(Sign::Plus),
             b'-' => Some(Sign::Minus),
             _ => None,
-        }
-    }
-
-    /// Returns either `+1` or `-1`
-    pub fn signum<I>(self) -> I
-    where
-        I: Signed,
-    {
-        match self {
-            Sign::Plus => I::one(),
-            Sign::Minus => -I::one(),
         }
     }
 }
