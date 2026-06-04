@@ -92,6 +92,12 @@ pub fn i128_through_utf8(c: &mut Criterion) {
     });
 }
 
+pub fn i128_negative_8_digit_number(c: &mut Criterion) {
+    c.bench_function("negative i128 8 digit number", |b| {
+        b.iter(|| i128::from_radix_10_signed(black_box(b"-12345678")))
+    });
+}
+
 criterion_group!(
     name = benches;
     config = Criterion::default().significance_level(0.01).sample_size(1000);
@@ -107,6 +113,7 @@ criterion_group!(
     i32_negative_four_digit_number,
     i32_positive_four_digit_number,
     i128_signed_four_digit_number,
+    i128_negative_8_digit_number,
     u32_through_utf8,
     i128_through_utf8,
 );
