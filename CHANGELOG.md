@@ -1,4 +1,10 @@
 # Changelog
+## [3.1.0](https://github.com/pacman82/odbc-api/compare/3.0.0...3.1.0) - 2026-06-25
+
+### 🚀 Features
+
+- Add support for isize and usize on 32 and 64 bit platforms
+
 
 ## [3.0.0](https://github.com/pacman82/odbc-api/compare/2.0.0...3.0.0) - 2026-06-04
 
