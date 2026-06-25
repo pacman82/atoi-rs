@@ -260,6 +260,15 @@ impl_traits_using_integer!(u64);
 impl_traits_using_integer!(i128);
 impl_traits_using_integer!(u128);
 
+#[cfg(target_pointer_width = "32")]
+impl_traits_using_integer!(isize);
+#[cfg(target_pointer_width = "64")]
+impl_traits_using_integer!(isize);
+#[cfg(target_pointer_width = "32")]
+impl_traits_using_integer!(usize);
+#[cfg(target_pointer_width = "64")]
+impl_traits_using_integer!(usize);
+
 // Num digits which are safe to parse without overflow
 trait SafeDigits {
     const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize;
@@ -355,4 +364,32 @@ impl SafeDigits for u128 {
     const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 32;
     // 0
     const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 0;
+}
+
+#[cfg(target_pointer_width = "64")]
+impl SafeDigits for isize {
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = i64::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10;
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = i64::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = i64::NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10;
+}
+
+#[cfg(target_pointer_width = "32")]
+impl SafeDigits for isize {
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = i32::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10;
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = i32::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = i32::NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10;
+}
+
+#[cfg(target_pointer_width = "64")]
+impl SafeDigits for usize {
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = u64::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10;
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = u64::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = u64::NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10;
+}
+
+#[cfg(target_pointer_width = "32")]
+impl SafeDigits for usize {
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10: usize = u32::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_10;
+    const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = u32::NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = u32::NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10;
 }
