@@ -1,4 +1,10 @@
-# Changelog
+# Changelog## [4.0.0](https://github.com/pacman82/odbc-api/compare/3.1.0...4.0.0) - 2026-09-24
+
+### ⚙️ Miscellaneous Tasks
+
+- [**breaking**] Minimal supported Rust version bumped to 1.94
+
+
 ## [3.1.0](https://github.com/pacman82/odbc-api/compare/3.0.0...3.1.0) - 2026-06-25
 
 ### 🚀 Features
