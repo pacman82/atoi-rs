@@ -300,7 +300,7 @@ impl SafeDigits for i16 {
     // 7FFF
     const NUM_SAFE_DIGITS_NON_NEGATIVE_RADIX_16: usize = 3;
     // -32768
-    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 5;
+    const NUM_SAFE_DIGITS_NON_POSITIVE_RADIX_10: usize = 4;
 }
 
 impl SafeDigits for u16 {
