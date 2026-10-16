@@ -1,4 +1,15 @@
 # Changelog
+
+## [3.1.1](https://github.com/pacman82/odbc-api/compare/3.1.0...3.1.1) - 2026-10-16
+
+### 🐛 Bug Fixes
+
+- Underflow behavior of `i16::from_radix_10_checked_signed` fixed.
+
+  Underflow behavior had been broken for 5 digit negative numbers smaller than -32768. Either reporting a wrong number in release builds or panicking in Debug builds instead.
+
+  Thanks to @mbutrovich for reporting the bug. See issue: <https://github.com/pacman82/atoi-rs/issues/54>
+
 ## [3.1.0](https://github.com/pacman82/odbc-api/compare/3.0.0...3.1.0) - 2026-06-25
 
 ### 🚀 Features
